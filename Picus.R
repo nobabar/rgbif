@@ -25,7 +25,7 @@ loc_sf = st_as_sf(locations,
 
 ggplot() + 
   geom_sf(data=world) +
-  geom_sf(data=loc_sf) +
+  geom_sf(data=loc_sf, color=rgb(0.2, 0.2, 0.2, alpha=0.4)) +
   coord_sf(xlim = c(-25, 50), ylim = c(35, 70)) +
   annotation_scale(location = "bl", width_hint = 0.1) +
   theme(
