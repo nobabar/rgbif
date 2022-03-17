@@ -20,7 +20,7 @@
 
 rm(list=ls())
 
-library(tidyr)
+library(tidyverse)
 library(rgbif)
 library(raster)
 library(ggplot2)
@@ -51,7 +51,7 @@ plot_occurences <- function(occs){
                             "decimalLatitude","decimalLongitude")]
   occs <- SpatialPoints(coords=locations[c("decimalLongitude","decimalLatitude")],
                         proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "))
-  plot(occs, col="red", pch=17)
+  plot(occs, col=rgb(red = 0.2, green = 0.2, blue = 0.2, alpha = 0.4), pch=16)
   plot(wrld_simpl, add=TRUE)
 }
 
