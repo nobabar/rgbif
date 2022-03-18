@@ -27,9 +27,3 @@ mapped <- map_fetch(taxonKey = 2480498, year = 2000:2017)
 plot(mapped)
 
 
-occ_download(pred("taxonKey", 2436775))
-d <- occ_download_get('') %>%
-  occ_download_import()
-
-
-

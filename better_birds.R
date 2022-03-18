@@ -30,7 +30,7 @@ library(maptools)
 data("wrld_simpl")
 
 get_birds <- function(specie_name, plot_occ=FALSE, plot_heat=FALSE){
-  occs <- occ_search(scientificName=specie_name, limit=5000) # might reduce limit
+  occs <- occ_search(scientificName=specie_name, limit=5000, hasCoordinate=TRUE)
   if (plot_occ){
     plot_occurences(occs)
   }
