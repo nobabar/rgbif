@@ -118,19 +118,36 @@ picus_key <- name_backbone(name="Picus viridis", rank="species")$speciesKey
 total_picus_1970 <- occ_count(taxonKey=picus_key, country="FR", year="1970,1979")
 total_picus_2010 <- occ_count(taxonKey=picus_key, country="FR", year="2010,2019")
 
+norm_occs_1970 <- occs_1970 %>%
+  group_by(level2Gid, decimalLatitude, decimalLongitude) %>% count(level2Gid) %>% mutate(n = n / total_picus_1970) %>% select(-level2Gid)
+
 occs_1970 %>%
   group_by(level2Name) %>% count(level2Name) %>% mutate(n = n / total_picus_1970) %>% filter(n > 2e-1) %>%
   ggplot(aes(x = reorder(level2Name, n), y = n, fill = n)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
-  labs(x = "Region of Organism", y = "Number of Occurrence") + 
+  labs(x = "Region of Organism", y = "Number of Occurrence") +
   coord_flip()
+
+norm_occs_2010 <- occs_2010 %>%
+  group_by(level2Gid, decimalLatitude, decimalLongitude) %>% count(level2Gid) %>% mutate(n = n / total_picus_2010) %>% select(-level2Gid)
 
 occs_2010 %>%
   group_by(level2Gid) %>% count(level2Name) %>% mutate(n = n / total_picus_2010) %>% filter(n > 2e-1) %>%
   ggplot(aes(x = reorder(level2Name, n), y = n, fill = n)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
-  labs(x = "Region of Organism", y = "Number of Occurrence") + 
+  labs(x = "Region of Organism", y = "Number of Occurrence") +
   coord_flip()
 
+# mapping after normalization ---- 
 
+ggplot(norm_occs_1970, aes(x=decimalLongitude, y=decimalLatitude)) + 
+  stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon") +
+  geom_path(data=map, aes(x=long, y=lat, group=group), colour="grey50") +
+  scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral"))) +
+  coord_fixed()
 
+ggplot(norm_occs_2010, aes(x=decimalLongitude, y=decimalLatitude)) + 
+  stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon") +
+  geom_path(data=map, aes(x=long, y=lat, group=group), colour="grey50") +
+  scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral"))) +
+  coord_fixed()
