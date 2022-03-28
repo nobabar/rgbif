@@ -45,7 +45,7 @@ make_maps <- function(occs, year=""){
   #     panel.grid.major = element_line(size = 0.2, linetype = "solid",
   #                                     colour = "#808080")
   #   ) +
-  #   ggtitle(paste("Occurences de Picus viridis pour l'année", year))
+  #   ggtitle(paste("Occurences de Picus viridis pour l'annï¿½e", year))
   # 
   # ggsave(paste0("./maps/picus_occurences_", year, ".png"))
   
@@ -63,7 +63,7 @@ make_maps <- function(occs, year=""){
       panel.grid.major = element_line(size = 0.2, linetype = "solid",
                                       colour = "#808080")
     ) +
-    ggtitle(paste("Heatmap de Picus viridis pour l'année", year))
+    ggtitle(paste("Heatmap de Picus viridis pour l'annï¿½e", year))
   
   ggsave(paste0("./maps/picus/picus_heatmap_", year, ".png"))
 }
@@ -108,7 +108,7 @@ mean_map <- function(occs, decennie, level){
     group_by_("eventDate", paste0("level", level, "Gid")) %>%
     summarise_at(vars("decimalLongitude", "decimalLatitude"), mean)
   
-  levels = c("régionales", "départementales", "communales")
+  levels = c("rï¿½gionales", "dï¿½partementales", "communales")
   
   ggplot(mean_locations, aes(x=decimalLongitude, y=decimalLatitude)) + 
     stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon") +
@@ -116,7 +116,7 @@ mean_map <- function(occs, decennie, level){
     scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral"))) +
     coord_fixed() +
     ggtitle(paste("Heatmap de moyennes", levels[level],
-                  "\nde Picus viridis pour la décennie", decennie))
+                  "\nde Picus viridis pour la dï¿½cennie", decennie))
   
   ggsave(paste0("./maps/picus/picus_mean_", levels[level], "_", decennie, ".png"))
 }
