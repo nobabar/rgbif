@@ -45,7 +45,7 @@ make_maps <- function(occs, year=""){
   #     panel.grid.major = element_line(size = 0.2, linetype = "solid",
   #                                     colour = "#808080")
   #   ) +
-  #   ggtitle(paste("Occurences de Picus viridis pour l'annï¿½e", year))
+  #   ggtitle(paste("Occurences de Picus viridis pour l'année", year))
   # 
   # ggsave(paste0("./maps/picus_occurences_", year, ".png"))
   
