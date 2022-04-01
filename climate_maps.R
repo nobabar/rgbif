@@ -101,9 +101,9 @@ to_keep <- c("gbifID", "identifier", "occurrenceID", "catalogNumber",
              "recordedBy", "individualCount", "occurrenceStatus", "eventDate",
              "year", "month", "day", "countryCode", "stateProvince", "county",
              "municipality", "decimalLatitude", "decimalLongitude", "datasetKey",
-             "hasCoordinate", "hasGeospatialIssues", "level0Gid", "level0Name",
-             "level1Gid", "level1Name", "level2Gid", "level2Name", "level3Gid",
-             "level3Name", "iucnRedListCategory")
+             "issue", "hasCoordinate", "hasGeospatialIssues", "level0Gid",
+             "level0Name", "level1Gid", "level1Name", "level2Gid", "level2Name",
+             "level3Gid", "level3Name", "iucnRedListCategory")
 
 rename_vec <- c(lon = "decimalLongitude", lat = "decimalLatitude")
 
@@ -113,6 +113,7 @@ occs_1970 <- data.table::fread("./data/occurrences/Hirundo_rustica_1970/occurren
                                encoding="UTF-8",
                                select=to_keep) %>%
   filter(!hasGeospatialIssues & hasCoordinate & occurrenceStatus=="PRESENT") %>%
+  filter(if_any(issue, ~!grepl(pattern="FOOTPRINT_WKT_INVALID|COORDINATE_ROUNDED.*GEODETIC_DATUM_ASSUMED_WGS84", .))) %>%
   select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
   rename(all_of(rename_vec))
 
@@ -122,29 +123,35 @@ occs_2010 <- data.table::fread("./data/occurrences/Hirundo_rustica_2010/occurren
                                encoding="UTF-8",
                                select=to_keep) %>%
   filter(!hasGeospatialIssues & hasCoordinate & occurrenceStatus=="PRESENT") %>%
+  filter(if_any(issue, ~!grepl(pattern="GEODETIC_DATUM_ASSUMED", .))) %>%
   select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
   rename(all_of(rename_vec))
 
 
-pts <- st_as_sf(occs_1970, coords = c("lon", "lat"),remove=FALSE)
-pts100 <- st_is_within_distance(pts, dist = 100)
-pts_agg <- aggregate(pts,
-                     pts$geometry,
-                     FUN = mean, 
-                     join = function(x, y) st_is_within_distance(x, y, dist = 100))
+# Combine occurences with climatic data
 
-mean_locations <- occs_1970 %>%
-  group_by(eventDate, level2Gid) %>%
-  summarise_at(vars("lon", "lat"), mean)
+library(sf)
+
+pts <- st_as_sf(occs_1970, coords = c("lon", "lat"), remove=FALSE) %>%
+  arrange(lon, lat) %>%
+  distinct(geometry, .keep_all=TRUE)
+
+has_neighbor <- pts %>% 
+  st_is_within_distance(dist=1, sparse=FALSE) %>% 
+  rowSums() > round(mean(occs_1970$individualCount, na.rm=TRUE))
+
+pts <- pts[has_neighbor,]
 
 tmean_1970 %>% 
   as("SpatialPixelsDataFrame") %>% 
   as.data.frame() %>%
   setNames(c("value", "x", "y")) %>%
-  ggplot(aes(x=x, y=y)) +
-  geom_tile(aes(fill=value), alpha=0.8) + 
+  ggplot() +
+  geom_tile(aes(x=x, y=y, fill=value)) + 
   geom_polygon(data=france1, aes(x=long, y=lat, group=group), 
                fill=NA, color="grey50", size=0.25) +
   scale_fill_gradientn(colours=rev(brewer.pal(11,"Spectral"))) +
-  geom_point(data=pts_agg, aes(x=lon, y=lat)) + 
+  geom_point(data=pts, aes(x=lon, y=lat)) + 
   coord_fixed()
+
+
