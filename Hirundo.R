@@ -3,56 +3,62 @@ library(ggplot2)
 library(ggtext)
 library(tidyverse)
 library(data.table)
-library(RColorBrewer)  # for brewer.pal(...)
+library(RColorBrewer)
 
 map <- map_data("france")
 
-dup_obs <- function(occs){
-  occs$individualCount[is.na(occs$individualCount)] <- round(mean(occs$individualCount, na.rm=TRUE))
-  idx <- rep(1:nrow(occs), occs$individualCount)
-  
-  return(occs[idx,])
+dup_obs <- function(occs) {
+  missing_data <- is.na(occs$individualCount)
+  occs$individualCount[missing_data] <- round(mean(occs$individualCount,
+                                                                  na.rm = TRUE))
+  idx <- rep(seq_len(nrow(occs)), occs$individualCount)
+  return(occs[idx, ])
 }
 
-make_maps <- function(occs, year=""){
+make_maps <- function(occs, year="") {
   locations <- as.data.frame(occs)
-  
-  ggplot(locations, aes(x=decimalLongitude, y=decimalLatitude)) + 
-    stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon") +
-    geom_path(data=map, aes(x=long, y=lat,group=group), colour="grey50") +
-    scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral"))) +
+
+  ggplot(locations, aes(x = decimalLongitude, y = decimalLatitude)) +
+    stat_density2d(aes(fill = ..level..),
+                   alpha = 0.5,
+                   geom = "polygon") +
+    geom_path(data = map,
+              aes(x = long, y = lat, group = group),
+              colour = "grey50") +
+    scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
     coord_fixed() +
-    ggtitle(paste("Heatmap de Hirundo rustica pour la décennie", year))
-  
+    ggtitle(paste("Heatmap de Hirundo rustica pour la decennie", year))
+
   ggsave(paste0("./maps/hirundo/hirundo_heatmap_", year, ".png"))
 }
 
 
-to_keep <- c("gbifID", "identifier", "occurrenceID", "catalogNumber",
-             "recordedBy", "individualCount", "occurrenceStatus", "eventDate",
-             "year", "month", "day", "countryCode", "stateProvince", "county",
-             "municipality", "decimalLatitude", "decimalLongitude", "datasetKey",
-             "hasCoordinate", "hasGeospatialIssues", "level0Gid", "level0Name",
-             "level1Gid", "level1Name", "level2Gid", "level2Name", "level3Gid",
-             "level3Name", "iucnRedListCategory")
+to_keep <- c("gbifID", "datasetKey", "recordedBy",
+             "individualCount", "occurrenceStatus",
+             "eventDate", "year", "month", "day",
+             "countryCode", "stateProvince", "county", "municipality",
+             "decimalLatitude", "decimalLongitude",
+             "issue", "hasCoordinate", "hasGeospatialIssues",
+             "level0Gid", "level0Name", "level1Gid", "level1Name",
+             "level2Gid", "level2Name", "level3Gid", "level3Name")
 
-# occs_1970 <- occ_search(scientificName="Hirundo rustica", limit=50000, country='FR', year="1970,1979", hasCoordinate=TRUE)
 occs_1970 <- data.table::fread("./data/Hirundo_rustica_1970/occurrence.txt",
-                               data.table=FALSE,
-                               fill=FALSE,
-                               encoding="UTF-8",
-                               select=to_keep) %>%
-  filter(!hasGeospatialIssues & hasCoordinate & occurrenceStatus=="PRESENT") %>%
+                               data.table = FALSE,
+                               fill = FALSE,
+                               encoding = "UTF-8",
+                               select = to_keep) %>%
+  filter(!hasGeospatialIssues & hasCoordinate) %>%
+  filter(occurrenceStatus == "PRESENT") %>%
   select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
   dup_obs
 
-# occs_2010 <- occ_search(scientificName="Hirundo rustica", limit=50000, country='FR', year="2010,2019", hasCoordinate=TRUE)
 occs_2010 <- data.table::fread("./data/Hirundo_rustica_2010/occurrence.txt",
-                               data.table=FALSE,
-                               fill=FALSE,
-                               encoding="UTF-8",
-                               select=to_keep) %>%
-  filter(!hasGeospatialIssues & hasCoordinate & occurrenceStatus=="PRESENT") %>%
+                               data.table = FALSE,
+                               fill = FALSE,
+                               encoding = "UTF-8",
+                               select = to_keep) %>%
+  filter(!hasGeospatialIssues & hasCoordinate) %>%
+  filter(occurrenceStatus == "PRESENT") %>%
   select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
   dup_obs
 
@@ -61,22 +67,27 @@ make_maps(occs_2010, "2010")
 
 # moyennage ----
 
-mean_map <- function(occs, decennie, level){
+mean_map <- function(occs, decennie, level) {
   mean_locations <- occs %>%
     group_by_("eventDate", paste0("level", level, "Gid")) %>%
     summarise_at(vars("decimalLongitude", "decimalLatitude"), mean)
-  
-  levels = c("régionales", "départementales", "communales")
-  
-  ggplot(mean_locations, aes(x=decimalLongitude, y=decimalLatitude)) + 
-    stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon") +
-    geom_path(data=map, aes(x=long, y=lat,group=group), colour="grey50") +
-    scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral"))) +
+
+  levels <- c("regionales", "departementales", "communales")
+
+  ggplot(mean_locations, aes(x = decimalLongitude, y = decimalLatitude)) +
+    stat_density2d(aes(fill = ..level..),
+                   alpha = 0.5,
+                   geom = "polygon") +
+    geom_path(data = map,
+              aes(x = long, y = lat, group = group),
+              colour = "grey50") +
+    scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
     coord_fixed() +
     ggtitle(paste("Heatmap de moyennes", levels[level],
-                  "\nde Hirundo rustica pour la décennie", decennie))
-  
-  ggsave(paste0("./maps/hirundo/hirundo_mean_level_", levels[level], "_", decennie, ".png"))
+                  "\nde Hirundo rustica pour la decennie", decennie))
+
+  ggsave(paste0("./maps/hirundo/hirundo_mean_level_",
+                levels[level], "_", decennie, ".png"))
 }
 
 mean_map(occs_1970, "1970", 1)
@@ -94,8 +105,8 @@ mean_map(occs_2010, "2010", 3)
 #                       proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "))
 # plot(SP, col=rgb(red = 0.2, green = 0.2, blue = 0.2, alpha = 0.4), pch=16)
 # plot(wrld_simpl, add=TRUE)
-# 
-# for (key in unique(locations$datasetKey)){
+#
+# for (key in unique(locations$datasetKey)) {
 #   SP <- SpatialPoints(coords=locations[locations$datasetKey==key,],
 #                       proj4string=CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0 "))
 #   mean_locations <- locations[locations$datasetKey==key,] %>%
@@ -110,44 +121,66 @@ mean_map(occs_2010, "2010", 3)
 
 # normalization ----
 
-total_1970 <- occ_count(country="FR", year="1970,1979")
-total_2010 <- occ_count(country="FR", year="2010,2019")
+total_1970 <- occ_count(country = "FR", year = "1970,1979")
+total_2010 <- occ_count(country = "FR", year = "2010,2019")
 
 
-picus_key <- name_backbone(name="Picus viridis", rank="species")$speciesKey
-total_picus_1970 <- occ_count(taxonKey=picus_key, country="FR", year="1970,1979")
-total_picus_2010 <- occ_count(taxonKey=picus_key, country="FR", year="2010,2019")
+picus_key <- name_backbone(name = "Picus viridis", rank = "species")$speciesKey
+total_picus_1970 <- occ_count(taxonKey = picus_key,
+                              country = "FR",
+                              year = "1970,1979")
+total_picus_2010 <- occ_count(taxonKey = picus_key,
+                              country = "FR",
+                              year = "2010,2019")
 
 norm_occs_1970 <- occs_1970 %>%
-  group_by(level2Gid, decimalLatitude, decimalLongitude) %>% count(level2Gid) %>% mutate(n = n / total_picus_1970) %>% select(-level2Gid)
+  group_by(level2Gid, decimalLatitude, decimalLongitude) %>%
+  count(level2Gid) %>%
+  mutate(n = n / total_picus_1970) %>%
+  select(-level2Gid)
 
 occs_1970 %>%
-  group_by(level2Name) %>% count(level2Name) %>% mutate(n = n / total_picus_1970) %>% filter(n > 2e-1) %>%
+  group_by(level2Name) %>%
+  count(level2Name) %>%
+  mutate(n = n / total_picus_1970) %>%
+  filter(n > 2e-1) %>%
   ggplot(aes(x = reorder(level2Name, n), y = n, fill = n)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
   labs(x = "Region of Organism", y = "Number of Occurrence") +
   coord_flip()
 
 norm_occs_2010 <- occs_2010 %>%
-  group_by(level2Gid, decimalLatitude, decimalLongitude) %>% count(level2Gid) %>% mutate(n = n / total_picus_2010) %>% select(-level2Gid)
+  group_by(level2Gid, decimalLatitude, decimalLongitude) %>%
+  count(level2Gid) %>%
+  mutate(n = n / total_picus_2010) %>%
+  select(-level2Gid)
 
 occs_2010 %>%
-  group_by(level2Gid) %>% count(level2Name) %>% mutate(n = n / total_picus_2010) %>% filter(n > 2e-1) %>%
+  group_by(level2Gid) %>%
+  count(level2Name) %>%
+  mutate(n = n / total_picus_2010) %>%
+  filter(n > 2e-1) %>%
   ggplot(aes(x = reorder(level2Name, n), y = n, fill = n)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
   labs(x = "Region of Organism", y = "Number of Occurrence") +
   coord_flip()
 
-# mapping after normalization ---- 
+# mapping after normalization ----
 
-ggplot(norm_occs_1970, aes(x=decimalLongitude, y=decimalLatitude)) + 
-  stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon") +
-  geom_path(data=map, aes(x=long, y=lat, group=group), colour="grey50") +
-  scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral"))) +
+ggplot(norm_occs_1970, aes(x = decimalLongitude, y = decimalLatitude)) +
+  stat_density2d(aes(fill = ..level..), alpha = 0.5, geom = "polygon") +
+  geom_path(data = map,
+            aes(x = long, y = lat, group = group),
+            colour = "grey50") +
+  scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
   coord_fixed()
 
-ggplot(norm_occs_2010, aes(x=decimalLongitude, y=decimalLatitude)) + 
-  stat_density2d(aes(fill = ..level..), alpha=0.5, geom="polygon") +
-  geom_path(data=map, aes(x=long, y=lat, group=group), colour="grey50") +
-  scale_fill_gradientn(colours=rev(brewer.pal(7,"Spectral"))) +
+ggplot(norm_occs_2010, aes(x = decimalLongitude, y = decimalLatitude)) +
+  stat_density2d(aes(fill = ..level..),
+                 alpha = 0.5,
+                 geom = "polygon") +
+  geom_path(data = map,
+            aes(x = long, y = lat, group = group),
+            colour = "grey50") +
+  scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
   coord_fixed()
