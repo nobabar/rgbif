@@ -51,8 +51,8 @@ for (i in seq_len(length(files_1970))) {
                 format = "GTiff",
                 overwrite = TRUE,
                 options = c("COMPRESS=DEFLATE",
-                            "PREDICTOR=2",
-                            "ZLEVEL=6"))
+                          "PREDICTOR=2",
+                          "ZLEVEL=6"))
 }
 
 
