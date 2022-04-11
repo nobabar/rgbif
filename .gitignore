@@ -1,9 +1,10 @@
 data/*
 
+maxent/*
+
 results/**/data_setup
 results/**/partitions
 results/**/final_models/*
 !results/**/final_models/*.png
-
 
 *.Rhistory
