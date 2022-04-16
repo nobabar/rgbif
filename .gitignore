@@ -3,6 +3,9 @@ wc2-5/*
 
 maxent/*
 
+results/maxent/*
+results/sample/*
+
 results/**/data_setup
 results/**/partitions
 results/**/final_models/*
