@@ -138,15 +138,26 @@ occs_2010 <- fread("./data/occurrences/Hirundo_rustica_2010/occurrence.txt",
 
 library(sf)
 
-pts <- st_as_sf(occs_1970, coords = c("lon", "lat"), remove = FALSE) %>%
+pts <- st_as_sf(occs_2010, coords = c("lon", "lat"), remove = FALSE) %>%
   arrange(lon, lat) %>%
   distinct(geometry, .keep_all = TRUE)
 
+# remove points that have too few neighbours
+# can also be done via a mean - more drastic
 has_neighbor <- pts %>%
   st_is_within_distance(dist = 1, sparse = FALSE) %>%
-  (rowSums() > round(mean(occs_1970$individualCount, na.rm = TRUE)))
+  rowSums() > round(quantile(occs_1970$individualCount, na.rm = TRUE, 0.25))
 
 pts <- pts[has_neighbor, ]
+
+pts_agg <- aggregate(pts,
+                     pts$geometry,
+                     FUN = mean,
+                     join = function(x, y) st_is_within_distance(x, y, dist = 1))
+
+mean_locations <- occs_1970 %>%
+  group_by(eventDate, level2Gid) %>%
+  summarise_at(vars("lon", "lat"), mean)
 
 tmean_1970 %>%
   as("SpatialPixelsDataFrame") %>%
