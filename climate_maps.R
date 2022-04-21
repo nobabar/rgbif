@@ -8,6 +8,10 @@ library(RColorBrewer)
 library(rasterVis)
 library(latticeExtra)
 
+
+# geographical data ----
+
+france0 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_0.shp")
 france1 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_1.shp")
 france2 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_2.shp")
 
@@ -134,7 +138,8 @@ occs_2010 <- fread("./data/occurrences/Hirundo_rustica_2010/occurrence.txt",
   rename(all_of(rename_vec))
 
 
-# Combine occurences with climatic data
+
+# Combine them all
 
 library(sf)
 

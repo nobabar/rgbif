@@ -8,12 +8,14 @@ built_up_1970 <- raster("./data/built_up_land/1970/GHS_BUILT_LDS1975_GLOBE_R2018
   mask(., spTransform(france, crs(.))) %>%
   writeRaster("./data/built_up_land/1970/GHS_BUILT_1975_FRANCE.tif")
 
+built_up_1970_france <- raster("./data/built_up_land/1970/GHS_BUILT_1975_FRANCE.tif")
 
 built_up_2010 <- raster("./data/built_up_land/2010/GHS_BUILT_LDS2014_GLOBE_R2018A_54009_1K_V2_0.tif") %>%
   crop(., spTransform(france, crs(.))) %>%
   mask(., spTransform(france, crs(.))) %>%
   writeRaster("./data/built_up_land/2010/GHS_BUILT_2014_FRANCE.tif")
 
+built_up_2010_france <- raster("./data/built_up_land/2010/GHS_BUILT_2014_FRANCE.tif")
 
 # 18th century roads and cities data ----
 
