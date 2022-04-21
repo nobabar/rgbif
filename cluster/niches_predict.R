@@ -1,4 +1,4 @@
-# qsub -cwd -V -N modleR_model -pe thread 1 -b y "Rscript niches_modleR.R"
+# qsub -cwd -V -N modleR_predict -pe thread 1 -b y "Rscript niches_predict.R"
 
 options(java.parameters = c("-XX:+UseConcMarkSweepGC", "-Xmx8192m"))
 library(xlsx)
@@ -32,7 +32,6 @@ occs_2010 <- fread("~/save/data/occurrences/Hirundo_rustica_2010/occurrence.txt"
   dplyr::select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
   rename(all_of(rename_vec))
 
-
 climatic_stack_2010 <- list.files("~/save/data/WorldClim_avg/2010",
                                   full.names = TRUE) %>% stack()
 
@@ -40,7 +39,7 @@ climatic_stack_2010 <- list.files("~/save/data/WorldClim_avg/2010",
 sdm_data <- setup_sdmdata(species_name = "Hirundo_rustica",
                           occurrences = occs_2010,
                           predictors = climatic_stack_2010,
-                          models_dir = "~/work/results/2010",
+                          models_dir = "~/work/results/2010_proj_1970",
                           partition_type = "crossvalidation",
                           cv_partitions = 5,
                           cv_n = 1,
@@ -57,21 +56,12 @@ sdm_data <- setup_sdmdata(species_name = "Hirundo_rustica",
 # fitting a model
 sp_maxent <- do_any(species_name = "Hirundo_rustica",
                     algorithm = "maxent",
+                    project_model = TRUE,
+                    proj_data_folder = "~/work/results/2010_proj_1970",
                     predictors = climatic_stack_2010,
-                    models_dir = "~/work/results/2010",
+                    models_dir = "~/work/results/2010_proj_1970",
                     png_partitions = TRUE,
                     write_bin_cut = FALSE,
                     equalize = TRUE,
                     write_rda = TRUE)
 
-# joining partitions
-final_model(species_name = "Hirundo_rustica",
-            algorithms = c("maxent"),
-            models_dir = "~/work/results/2010",
-            which_models = c("raw_mean",
-                             "bin_mean",
-                             "bin_consensus"),
-            consensus_level = 0.5,
-            uncertainty = TRUE,
-            png_final = TRUE,
-            overwrite = TRUE)
