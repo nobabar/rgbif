@@ -1,19 +1,33 @@
 library(raster)
-library(tidyverse)
+library(dplyr)
 
-france <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_2.shp")
+france <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_0.shp")
 
 built_up_1970 <- raster("./data/built_up_land/1970/GHS_BUILT_LDS1975_GLOBE_R2018A_54009_1K_V2_0.tif") %>%
   crop(., spTransform(france, crs(.))) %>%
-  mask(., spTransform(france, crs(.))) %>%
-  writeRaster("./data/built_up_land/1970/GHS_BUILT_1975_FRANCE.tif")
+  projectRaster(crs="+proj=longlat +datum=WGS84 +no_defs") %>%
+  crop(bbox(france)) %>%
+  mask(france) %>%
+  writeRaster("./data/built_up_land/1970/GHS_BUILT_1975_FRANCE.tif",
+              overwrite=TRUE,
+              format = "GTiff",
+              options = c("COMPRESS=DEFLATE",
+                          "PREDICTOR=2",
+                          "ZLEVEL=6"))
 
 built_up_1970_france <- raster("./data/built_up_land/1970/GHS_BUILT_1975_FRANCE.tif")
 
 built_up_2010 <- raster("./data/built_up_land/2010/GHS_BUILT_LDS2014_GLOBE_R2018A_54009_1K_V2_0.tif") %>%
   crop(., spTransform(france, crs(.))) %>%
-  mask(., spTransform(france, crs(.))) %>%
-  writeRaster("./data/built_up_land/2010/GHS_BUILT_2014_FRANCE.tif")
+  projectRaster(crs="+proj=longlat +datum=WGS84 +no_defs") %>%
+  crop(bbox(france)) %>%
+  mask(france) %>%
+  writeRaster("./data/built_up_land/2010/GHS_BUILT_2014_FRANCE.tif",
+              overwrite=TRUE,
+              format = "GTiff",
+              options = c("COMPRESS=DEFLATE",
+                          "PREDICTOR=2",
+                          "ZLEVEL=6"))
 
 built_up_2010_france <- raster("./data/built_up_land/2010/GHS_BUILT_2014_FRANCE.tif")
 

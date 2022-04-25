@@ -17,17 +17,20 @@ france2 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_2.shp")
 
 # averaging raster layers ----
 
-tmin_stack_1970 <- list.files("./data/WorldClim_France/1970",
-                              pattern = "tmin",
-                              full.names = TRUE) %>% stack()
+tmin_stack_1970 <- grep("tmin", list.files(paste0(output_dir, "/1970/"),
+                                           pattern = "tif$",
+                                           full.names = TRUE),
+                        value=TRUE) %>% stack()
 
-tmax_stack_1970 <- list.files("./data/WorldClim_France/1970",
-                              pattern = "tmax",
-                              full.names = TRUE) %>% stack()
+tmax_stack_1970 <- grep("tmax", list.files(paste0(output_dir, "/1970/"),
+                                           pattern = "tif$",
+                                           full.names = TRUE),
+                        value=TRUE) %>% stack()
 
-prec_stack_1970 <- list.files("./data/WorldClim_France/1970",
-                              pattern = "prec",
-                              full.names = TRUE) %>% stack()
+prec_stack_1970 <- grep("prec", list.files(paste0(output_dir, "/1970/"),
+                                           pattern = "tif$",
+                                           full.names = TRUE),
+                        value=TRUE) %>% stack()
 
 tmin_mean_1970 <- raster("./data/WorldClim_avg/1970/avg_tmin_1970.tif",
                          as.is = TRUE)

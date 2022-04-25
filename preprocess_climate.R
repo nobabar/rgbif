@@ -1,22 +1,7 @@
 library(raster)
-library(tidyverse)
+library(dplyr)
 
-
-france <- getData("GADM", country = "FR", level = 2)
-
-r <- getData("worldclim", var = "bio", res = 2.5)
-plot(r[[1]])
-
-poly <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_2.shp")
-plot(poly)
-
-
-r1 <- crop(r[[1]], bbox(france))
-plot(r1)
-
-r2 <- crop(r[[1]], bbox(poly))
-plot(r2)
-
+france <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_0.shp")
 
 # processing WorldClim data ----
 
@@ -32,8 +17,8 @@ files_1970 <- list.files(paste0(input_dir, "/1970"),
 
 # precipitation for first month of 1970
 precip_raster <- raster(grep(files_1970, pattern = "_prec_", value = TRUE)[1])
-precip_raster <- crop(precip_raster, poly)
-precip_raster <- mask(precipRaster, poly)
+precip_raster <- crop(precip_raster, france)
+precip_raster <- mask(precipRaster, france)
 
 plot(precipRaster, legend = FALSE)
 
@@ -42,8 +27,8 @@ plot(precipRaster, legend = FALSE)
 
 for (i in seq_len(length(files_1970))) {
   raster(files_1970[i]) %>%
-    crop(poly) %>%
-    mask(poly) %>%
+    crop(france) %>%
+    mask(france) %>%
     aggregate(fact = 2) %>%
     writeRaster(filename = sub("^(.*[/])",
                              paste0(output_dir, "/1970/"),
@@ -58,17 +43,20 @@ for (i in seq_len(length(files_1970))) {
 
 # averaging ----
 
-tmin_stack_1970 <- list.files(paste0(output_dir, "/1970/"),
-                              pattern = "tmin",
-                              full.names = TRUE) %>% stack()
+tmin_stack_1970 <- grep("tmin", list.files(paste0(output_dir, "/1970/"),
+                                           pattern = "tif$",
+                                           full.names = TRUE),
+                        value=TRUE) %>% stack()
 
-tmax_stack_1970 <- list.files(paste0(output_dir, "/1970/"),
-                              pattern = "tmax",
-                              full.names = TRUE) %>% stack()
+tmax_stack_1970 <- grep("tmax", list.files(paste0(output_dir, "/1970/"),
+                                           pattern = "tif$",
+                                           full.names = TRUE),
+                        value=TRUE) %>% stack()
 
-prec_stack_1970 <- list.files(paste0(output_dir, "/1970/"),
-                              pattern = "prec",
-                              full.names = TRUE) %>% stack()
+prec_stack_1970 <- grep("prec", list.files(paste0(output_dir, "/1970/"),
+                                           pattern = "tif$",
+                                           full.names = TRUE),
+                        value=TRUE) %>% stack()
 
 tmin_mean_1970 <- calc(tmin_stack_1970, mean)
 tmax_mean_1970 <- calc(tmax_stack_1970, mean)
