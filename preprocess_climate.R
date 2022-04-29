@@ -1,97 +1,122 @@
-library(raster)
-library(dplyr)
+# qsub -cwd -V -N preprocess_climate -pe thread 1 -b y "Rscript preprocess_climate.R"
 
-france <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_0.shp")
+if (!require("envirem")) install.packages("envirem"); library(envirem)
+if (!require("foreach")) install.packages("foreach"); library(foreach)
+if (!require("raster")) install.packages("raster"); library(raster)
+if (!require("dplyr")) install.packages("dplyr"); library(dplyr)
 
-# processing WorldClim data ----
 
-input_dir <- "./data/WorldClim"
-output_dir <- "./data/WorldClim_France"
-avg_dir <- "./data/WorldClim_avg"
+# directories and base files ----
 
-files_1970 <- list.files(paste0(input_dir, "/1970"),
+france <- shapefile("~/save/data/gadm40_FRA_shp/gadm40_FRA_0.shp")
+
+input_dir <- "~/work/WorldClim"
+output_dir <- "~/save/data/WorldClim_France"
+bioclim_dir <- "~/save/data/BioClim"
+avg_dir <- "~/save/data/WorldClim_avg"
+
+files_1970 <- list.files(file.path(input_dir, "1970"),
+                         pattern = ".tif$",
+                         full.names = TRUE,
+                         recursive = TRUE)
+
+files_2010 <- list.files(file.path(input_dir, "2010"),
                          pattern = ".tif$",
                          full.names = TRUE,
                          recursive = TRUE)
 
 
-# precipitation for first month of 1970
-precip_raster <- raster(grep(files_1970, pattern = "_prec_", value = TRUE)[1])
-precip_raster <- crop(precip_raster, france)
-precip_raster <- mask(precipRaster, france)
-
-plot(precipRaster, legend = FALSE)
-
-
 # preprocess all rasters ----
 
-for (i in seq_len(length(files_1970))) {
-  raster(files_1970[i]) %>%
-    crop(france) %>%
-    mask(france) %>%
-    aggregate(fact = 2) %>%
-    writeRaster(filename = sub("^(.*[/])",
-                             paste0(output_dir, "/1970/"),
-                             files_1970[i]),
-                format = "GTiff",
-                overwrite = TRUE,
-                options = c("COMPRESS=DEFLATE",
-                          "PREDICTOR=2",
-                          "ZLEVEL=6"))
+crop_mask <- function(files, decade, country, output_dir){
+  if (!dir.exists(bioclim_dir)) dir.create(output_dir)
+  
+  crop_mask_cluster <- parallel::makeCluster(5)
+  doParallel::registerDoParallel(crop_mask_cluster)
+  
+  foreach(
+    file = files,
+    .packages = c("raster", "dplyr")
+  ) %dopar% {
+    raster(file) %>%
+      crop(country) %>%
+      mask(country) %>%
+      writeRaster(filename = paste0(file.path(output_dir,
+                                              decade,
+                                              names(.)),
+                                    ".tif"),
+                  format = "GTiff",
+                  overwrite = TRUE)
+  }
+  parallel::stopCluster(crop_mask_cluster)
 }
 
-
-# averaging ----
-
-tmin_stack_1970 <- grep("tmin", list.files(paste0(output_dir, "/1970/"),
-                                           pattern = "tif$",
-                                           full.names = TRUE),
-                        value=TRUE) %>% stack()
-
-tmax_stack_1970 <- grep("tmax", list.files(paste0(output_dir, "/1970/"),
-                                           pattern = "tif$",
-                                           full.names = TRUE),
-                        value=TRUE) %>% stack()
-
-prec_stack_1970 <- grep("prec", list.files(paste0(output_dir, "/1970/"),
-                                           pattern = "tif$",
-                                           full.names = TRUE),
-                        value=TRUE) %>% stack()
-
-tmin_mean_1970 <- calc(tmin_stack_1970, mean)
-tmax_mean_1970 <- calc(tmax_stack_1970, mean)
-tmean_1970 <- (tmin_mean_1970 + tmax_mean_1970) / 2
-prec_mean_1970 <- calc(prec_stack_1970, mean)
+crop_mask(files_1970, "1970", france, output_dir)
+crop_mask(files_2010, "2010", france, output_dir)
 
 
-writeRaster(tmin_mean_1970,
-            filename = paste0(avg_dir, "/1970/avg_tmin_1970.tif"),
-            format = "GTiff",
-            overwrite = TRUE,
-            options = c("COMPRESS=DEFLATE",
-                        "PREDICTOR=2",
-                        "ZLEVEL=6"))
+# calculating bioclim variables ----
 
-writeRaster(tmax_mean_1970,
-            filename = paste0(avg_dir, "/1970/avg_tmax_1970.tif"),
-            format = "GTiff",
-            overwrite = TRUE,
-            options = c("COMPRESS=DEFLATE",
-                        "PREDICTOR=2",
-                        "ZLEVEL=6"))
+bioclim_decade <- function(source_dir, decade_range){
+  bioclim_cluster <- parallel::makeCluster(5)
+  doParallel::registerDoParallel(bioclim_cluster)
+  
+  bioc_res <- foreach(
+    year = decade_range,
+    .packages = c("raster", "dismo")
+  ) %dopar% {
+    tmin_stack <- stack(list.files(source_dir,
+                                   full.names = TRUE,
+                                   pattern = paste0("(.*tmin)",
+                                                    "(.*", year, ")",
+                                                    "(.*tif$)")))
+    
+    tmax_stack <- stack(list.files(source_dir,
+                                   full.names = TRUE,
+                                   pattern = paste0("(.*tmax)",
+                                                    "(.*", year, ")",
+                                                    "(.*tif$)")))
+    
+    prec_stack <- stack(list.files(source_dir,
+                                   full.names = TRUE,
+                                   pattern = paste0("(.*prec)",
+                                                    "(.*", year, ")",
+                                                    "(.*tif$)")))
+    
+    # generate all bioclim variables
+    bioc <- biovars(prec_stack, tmin_stack, tmax_stack)
+  }
+  parallel::stopCluster(bioclim_cluster)
+  return(bioc_res)
+}
 
-writeRaster(tmean_1970,
-            filename = paste0(avg_dir, "/1970/avg_tmean_1970.tif"),
-            format = "GTiff",
-            overwrite = TRUE,
-            options = c("COMPRESS=DEFLATE",
-                        "PREDICTOR=2",
-                        "ZLEVEL=6"))
+bioclim_1970 <- bioclim_decade(file.path(bioclim_dir, "1970"), 1970:1979)
+bioclim_2010 <- bioclim_decade(file.path(bioclim_dir, "1970"), 2010:2018)
 
-writeRaster(prec_mean_1970,
-            filename = paste0(avg_dir, "/1970/avg_prec_1970.tif"),
-            format = "GTiff",
-            overwrite = TRUE,
-            options = c("COMPRESS=DEFLATE",
-                        "PREDICTOR=2",
-                        "ZLEVEL=6"))
+
+# merge yearly bioclim layers ----
+
+combine_bioclim <- function(bioclim_res, output_dir){
+  if (!dir.exists(bioclim_dir)) dir.create(output_dir)
+  
+  bioclim_cluster <- parallel::makeCluster(5)
+  doParallel::registerDoParallel(bioclim_cluster)
+  
+  foreach(
+    layer = names(bioclim_res[[1]]),
+    .packages = c("dplyr", "raster")
+  ) %dopar% {
+    stack(bioclim_res) %>%
+      subset(grep(layer, names(.), value = TRUE)) %>%
+      calc(fun = mean, na.rm = TRUE) %>%
+      writeRaster(filename = paste0(file.path(output_dir,
+                                              layer),
+                                    ".tif"),
+                  format = "GTiff",
+                  overwrite = TRUE)
+  }
+  parallel::stopCluster(bioclim_cluster)
+}
+
+combine_bioclim(bioclim_1970, file.path(bioclim_dir, "1970"))
+combine_bioclim(bioclim_2010, file.path(bioclim_dir, "2010"))
