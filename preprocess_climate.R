@@ -1,4 +1,4 @@
-# qsub -cwd -V -N preprocess_climate -pe thread 1 -b y "Rscript preprocess_climate.R"
+# qsub -cwd -V -N preprocess_climate -pe thread 5 -b y "Rscript preprocess_climate.R"
 
 if (!require("envirem")) install.packages("envirem"); library(envirem)
 if (!require("foreach")) install.packages("foreach"); library(foreach)
