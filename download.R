@@ -1,19 +1,32 @@
 library(rgbif)
 
-download_gbif <- function(specie_name, decade, n_try=30, sleep_duration=30) {
-  ref <- paste0(gsub(" ", "_", specie_name), "_", as.character(decade))
+download_gbif <- function(specie_name, decade=NULL, n_try=30, sleep_duration=30) {
+  ref = ""
   specie_key <- name_backbone(name = specie_name, rank = "species")$speciesKey
 
   start_time <- Sys.time()
-  download_key <- occ_download(
-    pred("taxonKey", specie_key),
-    pred("country", "FR"),
-    pred("hasCoordinate", TRUE),
-    pred_and(
-      pred_gte("year", decade),
-      pred_lt("year", decade + 10)
+  if (is.null(decade)){
+    ref <- paste0(gsub(" ", "_", specie_name))
+    
+    download_key <- occ_download(
+      pred("taxonKey", specie_key),
+      pred("country", "FR"),
+      pred("hasCoordinate", TRUE)
     )
-  )
+  } else {
+    ref <- paste0(gsub(" ", "_", specie_name), "_", as.character(decade))
+    
+    download_key <- occ_download(
+      pred("taxonKey", specie_key),
+      pred("country", "FR"),
+      pred("hasCoordinate", TRUE),
+      pred_and(
+        pred_gte("year", decade),
+        pred_lt("year", decade + 10)
+      )
+    )
+  }
+  
 
   download_url <- paste0("http://api.gbif.org/v1/occurrence/download/request/",
                         download_key[1], ".zip")
@@ -54,3 +67,6 @@ download_gbif("Hirundo rustica", 2010)
 
 download_gbif("Picus viridis", 1970)
 download_gbif("Picus viridis", 2010)
+
+
+download_gbif("Margaritifera auricularia")
