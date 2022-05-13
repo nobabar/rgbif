@@ -1,12 +1,14 @@
-# qsub -cwd -V -N niches_ENMeval -pe thread 10 -b y "Rscript niches_ENMeval.R"
+# qsub -cwd -V -N niches_ENMeval_hirundo_2010 -pe thread 10 -b y "Rscript niches_ENMeval.R"
 
-library(ENMeval)
-library(raster)
-library(dplyr)
-library(data.table)
+if (!require("ENMeval")) install.packages("ENMeval"); library(ENMeval)
+if (!require("ggplot2")) install.packages("ggplot2"); library(ggplot2)
+if (!require("ggspatial")) install.packages("ggspatial"); library(ggspatial)
+if (!require("viridisLite")) install.packages("viridisLite"); library(viridisLite)
+if (!require("raster")) install.packages("raster"); library(raster)
+if (!require("dplyr")) install.packages("dplyr"); library(dplyr)
+if (!require("data.table")) install.packages("data.table"); library(data.table)
 
-
-occs_2010 <- fread("~/save/data/occurrences/occs_picus_2010.txt",
+occs_2010 <- fread("~/save/data/occurrences/occs_hirundo_2010.txt",
                    data.table = FALSE,
                    fill = FALSE,
                    encoding = "UTF-8")
@@ -24,107 +26,101 @@ built_up_2010 <- raster("~/save/data/settlement/2010/GHS_SMOD_2010_FRANCE.tif") 
 
 predictors <- stack(bioclim_stack_2010, built_up_2010)
 
+
+# extract the predictor values for each occurence
 occs_z <- cbind(pts_2010, raster::extract(predictors, pts_2010))
 
-occs.sim <- similarity(predictors, occs_z)
 
-occs.mess <- occs.sim$similarity_min
+# calculate environmental similarity
+# occs.sim <- similarity(predictors, occs_z)
+# occs.mess <- occs.sim$similarity_min
+# 
+# occs.sp <- sp::SpatialPoints(pts_2010)
+# 
+# myScale <- seq(cellStats(occs.mess, min), cellStats(occs.mess, max), length.out = 100)
+# rasterVis::levelplot(occs.mess, main = "Environmental similarity", at = myScale, margin = FALSE) +
+#   latticeExtra::layer(sp.points(occs.sp, col="black"))
 
-occs.sp <- sp::SpatialPoints(pts_2010)
-
-rasterVis::levelplot(occs.mess, main = "Environmental similarity", margin = FALSE) + 
-     latticeExtra::layer(sp.points(occs.sp, col="black"))
-
-myScale <- seq(cellStats(occs.mess, min), cellStats(occs.mess, max), length.out = 100)
-rasterVis::levelplot(occs.mess, main = "Environmental similarity", at = myScale, margin = FALSE) + 
-  latticeExtra::layer(sp.points(occs.sp, col="black"))
-
+# generate background points
 bg <- dismo::randomPoints(predictors, 10000)
 colnames(bg) <- colnames(pts_2010)
 
+# extract the predictor values for each background point
 bg_z <- cbind(bg, raster::extract(predictors, bg))
 
-
-# partitioning using random k-fold ----
-
-# rand <- get.randomkfold(pts_2010, bg, k = 5)
-# evalplot.grps(pts = pts_2010, pts.grp = rand$occs.grp, envs = predictors)
-# 
-# evalplot.envSim.hist(sim.type = "mess", ref.data = "occs", occs.z = occs_z, 
-#                      bg.z = bg_z, occs.grp = rand$occs.grp, bg.grp = rand$bg.grp)
-# 
-# evalplot.envSim.map(sim.type = "mess", ref.data = "occs", envs = predictors, occs.z = occs_z, 
-#                     bg.z = bg_z, occs.grp = rand$occs.grp, bg.grp = rand$bg.grp, 
-#                     bb.buf = 7)
-
+# modeling ----
 e.mx <- ENMevaluate(occs = pts_2010, envs = predictors, bg = bg, 
-                    algorithm = 'maxnet', partitions = 'randomkfold',
+                    algorithm = 'maxnet',
+                    partitions = 'randomkfold',
+                    partition.settings = list(kfolds = 12),
                     tune.args = list(fc = c("L","LQ","LQH","H"), rm = 1:5))
 
-# e.mx <- ENMevaluate(occs = pts_2010, envs = predictors, bg = bg, 
-#                     algorithm = 'maxnet', partitions = 'randomkfold',
-#                     tune.args = list(fc = c("L","LQ"), rm = 1:5))
-# 
-# e.mx <- ENMevaluate(occs = pts_2010, envs = predictors, bg = bg, 
-#                     algorithm = 'maxent.jar', partitions = 'randomkfold',
-#                     tune.args = list(fc = c("L","LQ","LQH","H"), rm = 1:5))
 
-overlap <- calc.niche.overlap(e.mx@predictions, overlapStat = "D")
+# overlap <- calc.niche.overlap(e.mx@predictions, overlapStat = "D")
 
-svg("~/save/fig/picus/2010/evalplot.svg")
-evalplot.stats(e = e.mx, stats = c("or.mtp", "auc.val"), color = "fc", x.var = "rm")
+svg("~/save/fig/hirundo/2010/evalplot.svg")
+evalplot.stats(e = e.mx, color = "fc", x.var = "rm",
+               stats = c("or.10p", "auc.val"))
 dev.off()
 
-res <- eval.results(e.mx)
-opt.aicc <- res %>% filter(delta.AICc == 0)
-opt.seq <- res %>% 
+# select best model based on highest AUC and lowest or.mtp
+opt.seq <- e.mx %>%
+  eval.results() %>%
   filter(or.10p.avg == min(or.10p.avg)) %>% 
-  filter(auc.val.avg == max(auc.val.avg))
+  filter(auc.val.avg == max(auc.val.avg)) %>%
+  tail(1)
 
-svg("~/save/fig/picus/2010/mod_seq.svg")
 mod.seq <- eval.models(e.mx)[[opt.seq$tune.args]]
+
+svg("~/save/fig/hirundo/2010/mod_seq.svg")
 plot(mod.seq, type = "cloglog")
 dev.off()
 
-svg("~/save/fig/picus/2010/mod_simple.svg")
-mod.simple <- eval.models(e.mx)[['fc.L_rm.5']]
-plot(mod.simple, type = "cloglog")
-dev.off()
-
-svg("~/save/fig/picus/2010/mod_complex.svg")
-mod.complex <- eval.models(e.mx)[['fc.LQH_rm.1']]
-plot(mod.complex, type = "cloglog")
-dev.off()
-
-svg("~/save/fig/picus/2010/pred.svg")
 pred.seq <- eval.predictions(e.mx)[[opt.seq$tune.args]]
-plot(pred.seq)
+
+svg("~/save/fig/pred.svg")
+pred.seq %>%
+  as("SpatialPixelsDataFrame") %>%
+  as.data.frame() %>%
+  setNames(c("value", "lon", "lat")) %>%
+  ggplot(aes(x = lon, y = lat)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_gradientn(colours = viridis(20),
+                       limits=c(0,1)) +
+  coord_sf(crs = sf::st_crs(4326)) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  theme(
+    panel.background = element_rect(fill = "#FFFFFF", colour = "#000000",
+                                    size = 1, linetype = "solid"),
+    panel.grid.major = element_line(size = 0.2, linetype = "solid",
+                                    colour = "#808080")
+  )
 dev.off()
 
-svg("~/save/fig/picus/2010/pred_occ.svg")
-plot(pred.seq)
-points(eval.bg(e.mx), pch = 3, col = eval.bg.grp(e.mx), cex = 0.1)
-points(eval.occs(e.mx), pch = 21, bg = eval.occs.grp(e.mx), cex = 0.8)
+
+svg("~/save/fig/hirundo/2010/pred_occ.svg")
+pred.seq %>%
+  as("SpatialPixelsDataFrame") %>%
+  as.data.frame() %>%
+  setNames(c("value", "lon", "lat")) %>%
+  ggplot(aes(x = lon, y = lat)) +
+  geom_tile(aes(fill = value)) +
+  scale_fill_gradientn(colours = viridis(20),
+                       limits=c(0,1)) +
+  geom_count(data=eval.occs(e.mx), size = 1.5, shape = 1) +
+  coord_sf(crs = sf::st_crs(4326)) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  theme(
+    panel.background = element_rect(fill = "#FFFFFF", colour = "#000000",
+                                    size = 1, linetype = "solid"),
+    panel.grid.major = element_line(size = 0.2, linetype = "solid",
+                                    colour = "#808080")
+  )
 dev.off()
 
-svg("~/save/fig/picus/2010/fc.LQH.svg")
-par(mfrow=c(2,2))
-plot(eval.predictions(e.mx)[['fc.LQH_rm.1']],
-     legend = FALSE, main = 'LQH_1 prediction')
-plot(eval.predictions(e.mx)[['fc.LQH_rm.2']],
-     legend = FALSE, main = 'LQH_2 prediction')
-plot(eval.predictions(e.mx)[['fc.LQH_rm.3']],
-     legend = FALSE, main = 'LQH_3 prediction')
-plot(eval.predictions(e.mx)[['fc.LQH_rm.4']],
-     legend = FALSE, main = 'LQH_4 prediction')
-dev.off()
+# null model
+mod.null <- ENMnulls(e.mx, mod.settings = list(fc = toString(opt.seq$fc), rm =  as.numeric(opt.seq$rm)), no.iter = 10, parallel = TRUE)
 
-mod.null <- ENMnulls(e.mx, mod.settings = list(fc = "LQ", rm = 5), no.iter = 10)
-
-svg("~/save/fig/picus/2010/hist_nullmod.svg")
-evalplot.nulls(mod.null, stats = c("or.10p", "auc.val"), plot.type = "histogram")
-dev.off()
-
-svg("~/save/fig/picus/2010/violin_nullmod.svg")
+svg("~/save/fig/hirundo/2010/nullmod.svg")
 evalplot.nulls(mod.null, stats = c("or.10p", "auc.val"), plot.type = "violin")
 dev.off()
