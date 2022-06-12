@@ -1,66 +1,44 @@
 library(rgbif)
 library(ggplot2)
 library(ggtext)
-library(tidyverse)
+library(dplyr)
 library(data.table)
-library(RColorBrewer)
+library(raster)
 
-map <- map_data("france")
+france0 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_0.shp")
+france1 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_1.shp")
+france2 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_2.shp")
 
-dup_obs <- function(occs) {
-  missing_data <- is.na(occs$individualCount)
-  occs$individualCount[missing_data] <- round(mean(occs$individualCount,
-                                                                  na.rm = TRUE))
-  idx <- rep(seq_len(nrow(occs)), occs$individualCount)
-  return(occs[idx, ])
-}
 
 make_maps <- function(occs, year="") {
   locations <- as.data.frame(occs)
 
-  ggplot(locations, aes(x = decimalLongitude, y = decimalLatitude)) +
+  ggplot(locations, aes(x = lon, y = lat)) +
     stat_density2d(aes(fill = ..level..),
-                   alpha = 0.5,
+                   alpha = 0.6,
                    geom = "polygon") +
-    geom_path(data = map,
+    geom_path(data = france1,
               aes(x = long, y = lat, group = group),
-              colour = "grey50") +
-    scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
+              colour = "grey30") +
+    scale_fill_viridis_c() +
     coord_fixed() +
-    ggtitle(paste("Heatmap de Hirundo rustica pour la decennie", year))
+    labs(title = "", x = "longitude", y = "latitude") +
+    theme(
+      panel.background = element_rect(fill = "#FFFFFF", colour = "#000000",
+                                      size = 1, linetype = "solid"),
+      panel.grid.major = element_line(size = 0.2, linetype = "solid",
+                                      colour = "#808080"),
+      legend.position = "none"
+    )
 
   ggsave(paste0("./maps/hirundo/hirundo_heatmap_", year, ".png"))
 }
 
+occs_1970 <- fread("./data/occurrences/occs_hirundo_1970.txt",
+                   data.table = FALSE)
 
-to_keep <- c("gbifID", "datasetKey", "recordedBy",
-             "individualCount", "occurrenceStatus",
-             "eventDate", "year", "month", "day",
-             "countryCode", "stateProvince", "county", "municipality",
-             "decimalLatitude", "decimalLongitude",
-             "issue", "hasCoordinate", "hasGeospatialIssues",
-             "level0Gid", "level0Name", "level1Gid", "level1Name",
-             "level2Gid", "level2Name", "level3Gid", "level3Name")
-
-occs_1970 <- data.table::fread("./data/Hirundo_rustica_1970/occurrence.txt",
-                               data.table = FALSE,
-                               fill = FALSE,
-                               encoding = "UTF-8",
-                               select = to_keep) %>%
-  filter(!hasGeospatialIssues & hasCoordinate) %>%
-  filter(occurrenceStatus == "PRESENT") %>%
-  select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
-  dup_obs
-
-occs_2010 <- data.table::fread("./data/Hirundo_rustica_2010/occurrence.txt",
-                               data.table = FALSE,
-                               fill = FALSE,
-                               encoding = "UTF-8",
-                               select = to_keep) %>%
-  filter(!hasGeospatialIssues & hasCoordinate) %>%
-  filter(occurrenceStatus == "PRESENT") %>%
-  select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
-  dup_obs
+occs_2010 <- fread("./data/occurrences/occs_hirundo_2010.txt",
+                   data.table = FALSE)
 
 make_maps(occs_1970, "1970")
 make_maps(occs_2010, "2010")
@@ -70,21 +48,19 @@ make_maps(occs_2010, "2010")
 mean_map <- function(occs, decennie, level) {
   mean_locations <- occs %>%
     group_by_("eventDate", paste0("level", level, "Gid")) %>%
-    summarise_at(vars("decimalLongitude", "decimalLatitude"), mean)
+    summarise_at(vars("lon", "lat"), mean)
 
   levels <- c("regionales", "departementales", "communales")
 
-  ggplot(mean_locations, aes(x = decimalLongitude, y = decimalLatitude)) +
+  ggplot(mean_locations, aes(x = lon, y = lat)) +
     stat_density2d(aes(fill = ..level..),
                    alpha = 0.5,
                    geom = "polygon") +
-    geom_path(data = map,
+    geom_path(data = france1,
               aes(x = long, y = lat, group = group),
-              colour = "grey50") +
-    scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
+              colour = "grey30") +
+    scale_fill_viridis_c() +
     coord_fixed() +
-    ggtitle(paste("Heatmap de moyennes", levels[level],
-                  "\nde Hirundo rustica pour la decennie", decennie))
 
   ggsave(paste0("./maps/hirundo/hirundo_mean_level_",
                 levels[level], "_", decennie, ".png"))
@@ -169,7 +145,7 @@ occs_2010 %>%
 
 ggplot(norm_occs_1970, aes(x = decimalLongitude, y = decimalLatitude)) +
   stat_density2d(aes(fill = ..level..), alpha = 0.5, geom = "polygon") +
-  geom_path(data = map,
+  geom_path(data = france0,
             aes(x = long, y = lat, group = group),
             colour = "grey50") +
   scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
@@ -179,8 +155,31 @@ ggplot(norm_occs_2010, aes(x = decimalLongitude, y = decimalLatitude)) +
   stat_density2d(aes(fill = ..level..),
                  alpha = 0.5,
                  geom = "polygon") +
-  geom_path(data = map,
+  geom_path(data = france0,
             aes(x = long, y = lat, group = group),
             colour = "grey50") +
   scale_fill_gradientn(colours = rev(brewer.pal(7, "Spectral"))) +
   coord_fixed()
+
+# tendance plot
+
+# data.df <- occs.decade1
+# 
+# ji <- function(xy, origin=c(0,0), cellsize=c(0.5,0.5)) {
+#   t(apply(xy, 1, function(z) cellsize/2+origin+cellsize*(floor((z - origin)/cellsize))))
+# }
+# JI <- ji(cbind(data.df$lon, data.df$lat), c(0.01, 0.01))
+# data.df$X <- JI[, 1]
+# data.df$Y <- JI[, 2]
+# data.df$Cell <- paste(data.df$X, data.df$Y)
+# 
+# counts <- by(data.df, data.df$Cell, function(d) c(d$X[1], d$Y[1], nrow(d)))
+# counts.m <- matrix(unlist(counts), nrow=3)
+# rownames(counts.m) <- c("X", "Y", "Count")
+# 
+# count.max <- max(counts.m["Count",])
+# colors = sapply(counts.m["Count",], function(n) hsv(sqrt(n/count.max), .7, .7, .8))
+# 
+# plot(france1, border = "grey30")
+# points(counts.m["X",], counts.m["Y",], cex=sqrt(counts.m["Count",]/3),
+#      pch = 19, col=colors)
