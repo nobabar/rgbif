@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="preds.svg"
+   inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\hirundo\preds.png"
+   inkscape:export-xdpi="512"
+   inkscape:export-ydpi="512"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.2129429"
+     inkscape:cx="251.45454"
+     inkscape:cy="255.98897"
+     inkscape:window-width="1920"
+     inkscape:window-height="991"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath7845">
+      <rect
+         style="fill:#0000ff;fill-rule:evenodd;stroke-width:0.264583"
+         id="rect7847"
+         width="22.9102"
+         height="41.604744"
+         x="159.55301"
+         y="35.33197" />
+    </clipPath>
+  </defs>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <image
+       width="80.060349"
+       height="80.015656"
+       preserveAspectRatio="none"
+       xlink:href="1970/pred_smod_legendless.png"
+       id="image29"
+       x="5"
+       y="70" />
+    <image
+       width="80.105057"
+       height="80.105057"
+       preserveAspectRatio="none"
+       xlink:href="1970/pred_bioc_legendless.png"
+       id="image121"
+       x="5"
+       y="-8.8817842e-16" />
+    <image
+       width="80.060349"
+       height="80.015656"
+       preserveAspectRatio="none"
+       xlink:href="2010/pred_smod_legendless.png"
+       id="image133"
+       x="75"
+       y="70" />
+    <image
+       width="80.060349"
+       height="80.015656"
+       preserveAspectRatio="none"
+       xlink:href="2010/pred_bioc_legendless.png"
+       id="image145"
+       x="75"
+       y="-8.8817842e-16" />
+    <g
+       id="g531"
+       transform="translate(5,0.50000004)">
+      <g
+         id="g4788"
+         transform="matrix(0.84705779,0,0,1,2.8019848,-2.7171729)">
+        <g
+           id="g10059">
+          <rect
+             style="fill:#808080;fill-rule:evenodd;stroke-width:0.293201"
+             id="rect79-7"
+             width="70.83342"
+             height="5.479207"
+             x="87.594986"
+             y="3.2171729" />
+          <text
+             xml:space="preserve"
+             style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+             x="119.92591"
+             y="7.1534734"
+             id="text1403"><tspan
+               sodipodi:role="line"
+               id="tspan1401"
+               style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583"
+               x="119.92591"
+               y="7.1534734">2010</tspan></text>
+        </g>
+      </g>
+      <g
+         id="g520"
+         transform="translate(0,0.5)">
+        <rect
+           style="fill:#808080;fill-rule:evenodd;stroke-width:0.26985"
+           id="rect79-7-7"
+           width="60"
+           height="5.479207"
+           x="7"
+           y="-8.8817842e-16" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           x="33.61586"
+           y="4.0355935"
+           id="text1403-4"><tspan
+             sodipodi:role="line"
+             id="tspan1401-1"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583"
+             x="33.61586"
+             y="4.0355935">1970</tspan></text>
+      </g>
+    </g>
+    <image
+       preserveAspectRatio="none"
+       inkscape:svg-dpi="96"
+       width="177.7119"
+       height="177.59891"
+       xlink:href="../legend.svg"
+       id="image7542"
+       x="159.55301"
+       y="35.331974"
+       clip-path="url(#clipPath7845)"
+       transform="translate(-12.553009,19.668026)" />
+    <g
+       id="g7739">
+      <g
+         id="g7503"
+         transform="matrix(0,0.81176371,-1,0,10.19638,9.3935688)">
+        <rect
+           style="fill:#808080;fill-rule:evenodd;stroke-width:0.293201"
+           id="rect79-7-9"
+           width="70.83342"
+           height="5.479207"
+           x="87.594986"
+           y="3.2171729" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           x="-144.66745"
+           y="-4.6712809"
+           id="text1403-9"
+           transform="scale(-0.99999999)"><tspan
+             sodipodi:role="line"
+             id="tspan1401-0"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583"
+             x="-144.66745"
+             y="-4.6712809">Bioclimatic + Urbanization</tspan></text>
+      </g>
+      <g
+         id="g520-5"
+         transform="matrix(0,0.95833333,-1,0,6.4792066,3.7916667)">
+        <rect
+           style="fill:#808080;fill-rule:evenodd;stroke-width:0.26985"
+           id="rect79-7-7-9"
+           width="60"
+           height="5.479207"
+           x="-67"
+           y="-5.4792066"
+           transform="scale(-1)" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:3.52778px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           x="-45.738903"
+           y="-1.5516779"
+           id="text1403-4-3"
+           transform="scale(-0.99999998)"><tspan
+             sodipodi:role="line"
+             id="tspan1401-1-6"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52778px;font-family:Arial;-inkscape-font-specification:Arial;stroke-width:0.264583"
+             x="-45.738903"
+             y="-1.5516779">Bioclimatic</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>
