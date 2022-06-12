@@ -1,6 +1,5 @@
 # qsub -cwd -V -N preprocess_climate -pe thread 5 -b y "Rscript preprocess_climate.R"
 
-if (!require("envirem")) install.packages("envirem"); library(envirem)
 if (!require("foreach")) install.packages("foreach"); library(foreach)
 if (!require("raster")) install.packages("raster"); library(raster)
 if (!require("dplyr")) install.packages("dplyr"); library(dplyr)
@@ -16,6 +15,11 @@ bioclim_dir <- "~/save/data/BioClim"
 avg_dir <- "~/save/data/WorldClim_avg"
 
 files_1970 <- list.files(file.path(input_dir, "1970"),
+                         pattern = ".tif$",
+                         full.names = TRUE,
+                         recursive = TRUE)
+
+files_2000 <- list.files(file.path(input_dir, "2000"),
                          pattern = ".tif$",
                          full.names = TRUE,
                          recursive = TRUE)
@@ -51,8 +55,9 @@ crop_mask <- function(files, decade, country, output_dir){
   parallel::stopCluster(crop_mask_cluster)
 }
 
-crop_mask(files_1970, "1970", france, output_dir)
-crop_mask(files_2010, "2010", france, output_dir)
+# crop_mask(files_1970, "1970", france, output_dir)
+crop_mask(files_2000, "2000", france, output_dir)
+# crop_mask(files_2010, "2010", france, output_dir)
 
 
 # calculating bioclim variables ----
@@ -90,8 +95,9 @@ bioclim_decade <- function(source_dir, decade_range){
   return(bioc_res)
 }
 
-bioclim_1970 <- bioclim_decade(file.path(bioclim_dir, "1970"), 1970:1979)
-bioclim_2010 <- bioclim_decade(file.path(bioclim_dir, "1970"), 2010:2018)
+# bioclim_1970 <- bioclim_decade(file.path(output_dir, "1970"), 1970:1979)
+bioclim_2000 <- bioclim_decade(file.path(output_dir, "2000"), 2000:2009)
+# bioclim_2010 <- bioclim_decade(file.path(output_dir, "2010"), 2010:2018)
 
 
 # merge yearly bioclim layers ----
@@ -118,5 +124,6 @@ combine_bioclim <- function(bioclim_res, output_dir){
   parallel::stopCluster(bioclim_cluster)
 }
 
-combine_bioclim(bioclim_1970, file.path(bioclim_dir, "1970"))
-combine_bioclim(bioclim_2010, file.path(bioclim_dir, "2010"))
+# combine_bioclim(bioclim_1970, file.path(bioclim_dir, "1970"))
+combine_bioclim(bioclim_2000, file.path(bioclim_dir, "2000"))
+# combine_bioclim(bioclim_2010, file.path(bioclim_dir, "2010"))
