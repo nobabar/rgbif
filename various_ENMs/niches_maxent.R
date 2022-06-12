@@ -56,11 +56,11 @@ if (any(dup)) {
 }
 
 # aggregate points within a minimum distance
+r <- raster(extent(range(occs_2010$lon), range(occs_2010$lat)))
 min_dist <- 0.5
-r <- raster(extent(range(occs_2010[, "lon"]), range(occs_2010[, "lat"])) + min_dist)
-occs_2010 <- dismo::gridSample(occs_2010[c("lon", "lat")], r, n = 1)
-
-
+res(r) <- min_dist
+r <- extend(r, extent(r) + min_dist)
+agg_occs_2010 <- dismo::gridSample(occs_2010[c("lon", "lat")], r, n = 1)
 
 
 to_test <- sample(seq_len(nrow(occs_2010)), size = floor(0.20 * nrow(occs_2010)))
