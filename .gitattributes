@@ -1,3 +1,2 @@
 *.* linguist-detectable=false
-*.py linguist-detectable=true
-*.ipynb linguist-detectable=true
+*.R linguist-detectable=true
