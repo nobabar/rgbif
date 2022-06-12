@@ -60,6 +60,18 @@ settle_1970 <- raster("./data/settlement/1970/GHS_SMOD_POP1975_GLOBE_R2019A_5400
                           "PREDICTOR=2",
                           "ZLEVEL=6"))
 
+settle_2000 <- raster("./data/settlement/2000/GHS_SMOD_POP2000_GLOBE_R2019A_54009_1K_V2_0.tif") %>%
+  crop(., spTransform(france, crs(.))) %>%
+  projectRaster(crs="+proj=longlat +datum=WGS84 +no_defs") %>%
+  crop(bbox(france)) %>%
+  mask(france) %>%
+  writeRaster("./data/settlement/2000/GHS_SMOD_2000_FRANCE.tif",
+              overwrite=TRUE,
+              format = "GTiff",
+              options = c("COMPRESS=DEFLATE",
+                          "PREDICTOR=2",
+                          "ZLEVEL=6"))
+
 settle_2010 <- raster("./data/settlement/2010/GHS_SMOD_POP2015_GLOBE_R2019A_54009_1K_V2_0.tif") %>%
   crop(., spTransform(france, crs(.))) %>%
   projectRaster(crs="+proj=longlat +datum=WGS84 +no_defs") %>%
