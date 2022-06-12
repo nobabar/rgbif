@@ -1,14 +1,4 @@
 data/*
-wc2-5/*
-
 maxent/*
-
-results/maxent/*
-results/sample/*
-
-results/**/data_setup
-results/**/partitions
-results/**/final_models/*
-!results/**/final_models/*.png
 
 *.Rhistory
