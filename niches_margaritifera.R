@@ -8,6 +8,7 @@ if (!require("terra")) install.packages("terra")
 if (!require("dplyr")) install.packages("dplyr"); library(dplyr)
 if (!require("ggplot2")) install.packages("ggplot2"); library(ggplot2)
 if (!require("ggspatial")) install.packages("ggspatial"); library(ggspatial)
+if (!require("RColorBrewer")) install.packages("RColorBrewer"); library(RColorBrewer)
 if (!require("data.table")) install.packages("data.table"); library(data.table)
 if (!require("foreach")) install.packages("foreach"); library(foreach)
 
@@ -133,13 +134,14 @@ occs.2010 <- fread("~/save/data/occurrences/occs_margaritifera_2010.txt",
                    data.table = FALSE)
 
 riparian.2000 <- list.files("~/save/data/rivers/riparian_zones/2000",
-                            pattern = "Loire.+tif$", full.names = TRUE) %>% stack()
+                            pattern = "france_west.+tif$", full.names = TRUE) %>% stack()
 
 riparian.2010 <- list.files("~/save/data/rivers/riparian_zones/2010",
-                            pattern = "Loire.+tif$", full.names = TRUE) %>% stack()
+                            pattern = "france_west.+tif$", full.names = TRUE) %>% stack()
 
 river.shape <- raster("~/save/data/rivers/rivers_shape/euhydro_loire_v013_GPKG/euhydro_loire_v013.tif") %>%
   projectRaster(riparian.2000, method = "bilinear")
+river.shape[is.na(river.shape[])] <- 0 
 
 bioclim.2000 <- list.files("~/save/data/BioClim/2000",
                            pattern = "tif$", full.names = TRUE) %>% stack() %>%
@@ -149,9 +151,9 @@ bioclim.2010 <- list.files("~/save/data/BioClim/2010",
                            pattern = "tif$", full.names = TRUE) %>% stack() %>%
   projectRaster(riparian.2000, method = "bilinear")
 
-predictors.2000 <- stack(bioclim.2000, river.shape, riparian.2000)
+predictors.2000 <- stack(bioclim.2000, riparian.2000)
 
-predictors.2010 <- stack(bioclim.2010, river.shape, riparian.2010)
+predictors.2010 <- stack(bioclim.2010, riparian.2010)
 
 # modeling ----
 print("starting modeling on first decade data")
