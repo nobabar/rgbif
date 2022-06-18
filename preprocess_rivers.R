@@ -22,7 +22,7 @@ tiles_data <- france_tiles %>%
   as("SpatialPixelsDataFrame") %>%
   as.data.frame()
 
-interest_rivers = c("Loire"="rpz_DU017A", "Ebro"="rpz_DU019A")
+interest_rivers = c("Loire"="rpz_DU017A", "Ebro"="rpz_DU019A", "Garonne" = "rpz_DU041A")
 
 riparian_zone_stats <- list.files("./data/rivers/riparian_zones", pattern = "gpkg$",
                                   recursive = TRUE, full.names = TRUE)
@@ -32,24 +32,24 @@ riparian_zone_stats <- grep(interest_rivers["Loire"],
                             riparian_zone_stats,
                             value = TRUE)
 
-for (riparian_zone in riparian_zone_stats){
-  stats <- st_read(riparian_zone)
+for (stat in riparian_zone_stats){
+  stats <- st_read(stat)
   stats <- stats[order(stats$zone),]
   
   tdata <- tiles_data[,2:3]
-  tdata$value[tiles_data$france_tiles %in% stats$zone] <- stats$sum
+  tdata$value[tiles_data$france_tiles %in% stats$zone] <- stats$count
   
   rdf <- rasterFromXYZ(tdata)
   crs(rdf) <- crs(france_tiles)
   
   path <- gsub("(/[^/]*){3}$", "",
-               sub("(.*\\/)([^.]+)(\\.[[:alnum:]]+$)", "\\1", riparian_zone))
+               sub("(.*\\/)([^.]+)(\\.[[:alnum:]]+$)", "\\1", stat))
   
   filename <- gsub("(_[^_]*){2}$", "",
-                   sub("(.*\\/)([^.]+)(\\.[[:alnum:]]+$)", "\\2", riparian_zone))
+                   sub("(.*\\/)([^.]+)(\\.[[:alnum:]]+$)", "\\2", stat))
   
   zone <- sub("(^([^_]*_){2})(.+)(_stats)", "\\3",
-               sub("(.*\\/)([^.]+)(\\.[[:alnum:]]+$)", "\\2", riparian_zone))
+               sub("(.*\\/)([^.]+)(\\.[[:alnum:]]+$)", "\\2", stat))
   
   river <- names(interest_rivers[interest_rivers==filename])
   
@@ -57,6 +57,46 @@ for (riparian_zone in riparian_zone_stats){
               paste0(path, "/", river, "_", zone, ".tif"),
               overwrite=TRUE,
               format = "GTiff")
+}
+
+
+ListRasters <- function(list_names) {
+  raster_list <- list()
+  for (name in list_names){ 
+    raster_file <- raster(name)
+    raster_list <- append(raster_list, raster_file)
+  }
+  return(raster_list)
+}
+
+mosaicList <- function(rasList){
+  raster_list <- sapply(rasList, FUN = ListRasters)
+  
+  names(raster_list) <- NULL
+  raster_list$fun <- sum
+  
+  mos <- do.call(raster::mosaic, raster_list)
+  
+  crs(mos) <- crs(raster_list[[1]])
+  mos <- setExtent(mos, extent(-4.769640341, 4.983926277, 42.045843294, 49.466368590))
+  return(mos)
+}
+
+riparian_zone <- list.files("./data/rivers/riparian_zones", pattern = "(Garonne|Loire).+tif$",
+                            recursive = TRUE, full.names = TRUE)
+
+for (year in c(2000, 2010)){
+  for (zone in c("urban", "crop", "land")){
+    riparian <- grep(paste0(".*", year, ".*", zone, ".*"),
+                     riparian_zone,
+                     value = TRUE)
+    mos_rip <- mosaicList(riparian)
+    
+    writeRaster(mos_rip,
+                paste0("./data/rivers/riparian_zones/", year, "/france_west_", zone, ".tif"),
+                overwrite=TRUE,
+                format = "GTiff")
+  }
 }
 
 

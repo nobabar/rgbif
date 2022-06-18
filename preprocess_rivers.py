@@ -11,12 +11,12 @@ import processing
 # extract layer from raster
 
 
-def calculator(in_file, out_file, expression):
+def calculator(in_file, out_file, extent, expression):
     processing.run('qgis:rastercalculator', {'INPUT': in_file,
                                              'CELLSIZE': 100,
                                              'EXPRESSION': expression,
                                              'CRS': QgsCoordinateReferenceSystem('EPSG:3035'),
-                                             'EXTENT': '3240269.854700000,3909569.854700000,2408574.042600000,2944074.042600000 [EPSG:3035]',
+                                             'EXTENT': extent,
                                              'OUTPUT': out_file})
 
 
@@ -84,15 +84,31 @@ projected_tif = glob.glob(
 #                               "DATA_TYPE": 1,
 #                               "OUTPUT": outfile})
 
-interest_rivers = ["rpz_DU017A", "rpz_DU019A"]
+processing.run('saga:mosaickrasterlayers', {"GRIDS": tif_files,
+                                            "RESAMPLING": 1,
+                                            "OVERLAP": 3,
+                                            "TARGET_USER_XMIN": -5.125000000,
+                                            "TARGET_USER_XMAX": 9.541666667,
+                                            "TARGET_USER_YMIN": 41.375000000,
+                                            "TARGET_USER_YMAX": 51.083333333,
+                                            "TARGET_USER_SIZE": 100,
+                                            "TARGET_USER_FITS": 1,
+                                            "TARGET_OUT_GRID": outfile})
+
+# Loire, Ebro and Garonne
+interest_rivers = ["rpz_DU017A", "rpz_DU019A", "rpz_DU041A"]
+
+extents = ['3240269.8547,3909569.8547,2408574.0426,2944074.0426 [EPSG:3035]',
+           '3154460.7381,3758760.7381,1733799.1158,2327699.1158 [EPSG:3035]',
+           '3374621.2481,3829821.2481,2198776.3571,2624776.3571 [EPSG:3035]']
 
 interest_tif = [x for x in projected_tif if os.path.basename(x).split(".")[
     0] in interest_rivers]
 
 
-def extract_zones(tif_file, zone_file, zone, expression):
+def extract_zones(tif_file, zone_file, zone, expression, extent):
     out_file = tif_file.replace('.tif', f'_{zone}.tif')
-    calculator(tif_file, out_file,
+    calculator(tif_file, out_file, extent,
                f'"{os.path.basename(tif_file).split(".")[0]}@1" {expression}')
     reprojected_out = out_file.replace(".tif", "_reprojected.tif")
     reproject(out_file, reprojected_out)
@@ -101,11 +117,11 @@ def extract_zones(tif_file, zone_file, zone, expression):
 
 
 # extract three layers and compute their stats
-for tif in interest_tif:
+for i, tif in enumerate(interest_tif):
     zone_file = "./data/rivers/riparian_zones/france_tiles.tif"
-    extract_zones(tif, zone_file, "urban", "= 1")
-    extract_zones(tif, zone_file, "crop", "= 2")
-    extract_zones(tif, zone_file, "land", ">= 3")
+    extract_zones(tif, zone_file, "urban", "= 1", extents[i])
+    extract_zones(tif, zone_file, "crop", "= 2", extents[i])
+    extract_zones(tif, zone_file, "land", ">= 3", extents[i])
 
 
 '''
