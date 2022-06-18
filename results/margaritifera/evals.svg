@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (b8e25be833, 2022-02-05)"
+   sodipodi:docname="evals.svg"
+   inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\margaritifera\evals.png"
+   inkscape:export-xdpi="1024"
+   inkscape:export-ydpi="1024"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.3182814"
+     inkscape:cx="452.10378"
+     inkscape:cy="249.18807"
+     inkscape:window-width="1920"
+     inkscape:window-height="991"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g6386" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       id="g6075"
+       transform="translate(0,7.0486374)"
+       inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\ENMeval\SMOD\hirundo\evals.png"
+       inkscape:export-xdpi="1024"
+       inkscape:export-ydpi="1024">
+      <g
+         id="g6386"
+         inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\ENMeval\SMOD\picus\evals.png"
+         inkscape:export-xdpi="1024"
+         inkscape:export-ydpi="1024">
+        <image
+           preserveAspectRatio="none"
+           inkscape:svg-dpi="96"
+           width="97.061996"
+           height="97.061996"
+           style="image-rendering:optimizeSpeed"
+           xlink:href="2000/evalplot.svg"
+           id="image16262"
+           x="13.45"
+           y="5.0003624"
+           inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\margaritifera\evals.png"
+           inkscape:export-xdpi="1024"
+           inkscape:export-ydpi="1024" />
+        <image
+           preserveAspectRatio="none"
+           inkscape:svg-dpi="96"
+           width="97.061996"
+           height="97.061996"
+           style="image-rendering:optimizeSpeed"
+           xlink:href="2010/evalplot.svg"
+           id="image11247"
+           x="100.212"
+           y="5.0003624"
+           inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\margaritifera\evals.png"
+           inkscape:export-xdpi="1024"
+           inkscape:export-ydpi="1024" />
+        <rect
+           style="fill:#d9d9d9;fill-opacity:1;fill-rule:evenodd;stroke:#656565;stroke-width:0.150297;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect20476"
+           width="72.621468"
+           height="3.8090901"
+           x="24.558559"
+           y="0.28670648"
+           inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\margaritifera\evals.png"
+           inkscape:export-xdpi="1024"
+           inkscape:export-ydpi="1024" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:2.82222px;line-height:1.25;font-family:sans-serif;fill:#333333;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           x="57.791069"
+           y="3.1162834"
+           id="text30419"
+           inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\margaritifera\evals.png"
+           inkscape:export-xdpi="1024"
+           inkscape:export-ydpi="1024"><tspan
+             sodipodi:role="line"
+             id="tspan30417"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Arial;-inkscape-font-specification:Arial;fill:#333333;fill-opacity:1;stroke-width:0.264583"
+             x="57.791069"
+             y="3.1162834">2000</tspan></text>
+        <rect
+           style="fill:#d9d9d9;fill-opacity:1;fill-rule:evenodd;stroke:#656565;stroke-width:0.151029;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect20476-0"
+           width="73.31987"
+           height="3.8096268"
+           x="110.70988"
+           y="0.28654921"
+           inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\margaritifera\evals.png"
+           inkscape:export-xdpi="1024"
+           inkscape:export-ydpi="1024" />
+        <text
+           xml:space="preserve"
+           style="font-style:normal;font-weight:normal;font-size:2.82222px;line-height:1.25;font-family:sans-serif;fill:#333333;fill-opacity:1;stroke:none;stroke-width:0.264583"
+           x="144.31958"
+           y="3.1659768"
+           id="text30419-4"
+           inkscape:export-filename="D:\Data\Stage_cdf\scripts\results\margaritifera\evals.png"
+           inkscape:export-xdpi="1024"
+           inkscape:export-ydpi="1024"><tspan
+             sodipodi:role="line"
+             id="tspan30417-4"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222px;font-family:Arial;-inkscape-font-specification:Arial;fill:#333333;fill-opacity:1;stroke-width:0.264583"
+             x="144.31958"
+             y="3.1659768">2010</tspan></text>
+      </g>
+    </g>
+  </g>
+</svg>
