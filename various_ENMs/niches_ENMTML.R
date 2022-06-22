@@ -3,9 +3,9 @@
 if (!require("ENMTML")) install.packages("ENMTML")
 library(ENMTML)
 
-ENMTML(pred_dir = "~/save/data/WorldClim/1970",
-       result_dir = "~/work/results/ENMTML",
-       occ_file = "~/save/data/occurrences/Hirundo_rustica_1970/occurrence.txt",
+ENMTML(pred_dir = "./data/WorldClim/1970",
+       result_dir = "./results/ENMTML",
+       occ_file = "./data/occurrences/Hirundo_rustica_1970/occurrence.txt",
        sp = "acceptedScientificName",
        x = "decimalLongitude",
        y = "decimalLatitude",
@@ -17,25 +17,3 @@ ENMTML(pred_dir = "~/save/data/WorldClim/1970",
        thr = c(type = "MAX_TSS"),
        msdm = c(method = "KER"),
        cores = 4)
-
-# Checking for function arguments ...
-# Loading environmental variables ...
-# RasterBrick successfully created!
-# Performing a reduction of variables collinearity ...
-# Avis dans dir.create(DirPCA) :
-#   '/home/brousseau/save/data/WorldClim/1970/PCA' existe déjà
-# Avis dans dir.create(DirPCATab) :
-#   '/home/brousseau/save/data/WorldClim/1970/PCA/Tables' existe déjà
-# Avis dans if (tolower(e) %in% c(".tiff", ".tif")) { :
-#   la condition a une longueur > 1 et seul le premier élément est utilisé
-# Avis dans ENMTML(pred_dir = "~/save/data/WorldClim/1970", result_dir = "~/work/results/ENMTML",  :
-#   The minimum number of occurrences is smaller than the number of predictors.
-#             This may cause some issues while fitting certain algorithms!
-# Loading and processing species occurrence data ...
-# Result folder already exists, files may be overwritten!
-# Avis dans dir.create(DirR, recursive = T) :
-#   '/home/brousseau/work/results/ENMTML' existe déjà
-# Results can be found at:
-# ~/work/results/ENMTML
-# Erreur dans scan(file = file, what = what, sep = sep, quote = quote, dec = dec,  :
-#   la ligne 1 n'avait pas 257 éléments

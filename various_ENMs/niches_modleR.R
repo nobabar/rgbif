@@ -1,5 +1,7 @@
 # qsub -cwd -V -N modleR_model -pe thread 1 -b y "Rscript niches_modleR.R"
 
+# set correct option for the java VM
+# otherwise cluster might crash
 options(java.parameters = c("-XX:+UseConcMarkSweepGC", "-Xmx8192m"))
 library(xlsx)
 gc()
@@ -10,7 +12,7 @@ library(raster)
 library(tidyverse)
 library(data.table)
 
-
+# columns to keep in dataset
 to_keep <- c("gbifID", "datasetKey", "recordedBy",
              "individualCount", "occurrenceStatus",
              "eventDate", "year", "month", "day",
@@ -22,25 +24,24 @@ to_keep <- c("gbifID", "datasetKey", "recordedBy",
 
 rename_vec <- c(lon = "decimalLongitude", lat = "decimalLatitude")
 
-occs_2010 <- fread("~/save/data/occurrences/Hirundo_rustica_2010/occurrence.txt",
+# import and filter data
+occs_2010 <- fread("./data/occurrences/Hirundo_rustica_2010/occurrence.txt",
                    data.table = FALSE,
-                   fill = FALSE,
-                   encoding = "UTF-8",
                    select = to_keep) %>%
   filter(!hasGeospatialIssues & hasCoordinate) %>%
   filter(occurrenceStatus == "PRESENT") %>%
   dplyr::select(-c(hasGeospatialIssues, hasCoordinate, occurrenceStatus)) %>%
   rename(all_of(rename_vec))
 
-
-climatic_stack_2010 <- list.files("~/save/data/WorldClim_avg/2010",
+# climatic predictors
+climatic_stack_2010 <- list.files("./data/WorldClim_avg/2010",
                                   full.names = TRUE) %>% stack()
 
-# cleaning and settig up the data
+# cleaning and setting up the data
 sdm_data <- setup_sdmdata(species_name = "Hirundo_rustica",
                           occurrences = occs_2010,
                           predictors = climatic_stack_2010,
-                          models_dir = "~/work/results/2010",
+                          models_dir = "./results/2010",
                           partition_type = "crossvalidation",
                           cv_partitions = 5,
                           cv_n = 1,
@@ -58,7 +59,7 @@ sdm_data <- setup_sdmdata(species_name = "Hirundo_rustica",
 sp_maxent <- do_any(species_name = "Hirundo_rustica",
                     algorithm = "maxent",
                     predictors = climatic_stack_2010,
-                    models_dir = "~/work/results/2010",
+                    models_dir = "./results/2010",
                     png_partitions = TRUE,
                     write_bin_cut = FALSE,
                     equalize = TRUE,
@@ -67,7 +68,7 @@ sp_maxent <- do_any(species_name = "Hirundo_rustica",
 # joining partitions
 final_model(species_name = "Hirundo_rustica",
             algorithms = c("maxent"),
-            models_dir = "~/work/results/2010",
+            models_dir = "./results/2010",
             which_models = c("raw_mean",
                              "bin_mean",
                              "bin_consensus"),
