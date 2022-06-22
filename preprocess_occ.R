@@ -3,9 +3,11 @@ library(dplyr)
 library(data.table)
 library(CoordinateCleaner)
 
+# france borders
 france0 <- shapefile("./data/gadm40_FRA_shp/gadm40_FRA_0.shp")
 
 clean_occs <- function(infile, outfile){
+  # columns to keep in file
   to_keep <- c("gbifID", "datasetKey", "recordedBy",
                "individualCount", "occurrenceStatus",
                "eventDate", "year", "month", "day",
@@ -15,19 +17,19 @@ clean_occs <- function(infile, outfile){
                "level0Gid", "level0Name", "level1Gid", "level1Name",
                "level2Gid", "level2Name", "level3Gid", "level3Name")
   
+  # rename columns
   rename_vec <- c(lon = "decimalLongitude", lat = "decimalLatitude")
   
+  # read file and filter data
   occs <- fread(infile,
                 data.table = FALSE,
-                fill = FALSE,
-                encoding = "UTF-8",
                 select = to_keep) %>%
     rename(all_of(rename_vec)) %>%
-    filter(!hasGeospatialIssues & hasCoordinate) %>%
-    filter(occurrenceStatus == "PRESENT") %>%
-    filter(if_any(issue, ~!grepl(pattern = "GEODETIC_DATUM_ASSUMED_WGS84;FOOTPRINT_WKT_INVALID", .))) %>%
-    filter(cc_sea(., lon = "lon", lat = "lat", ref = france0, value = "flagged")) %>%
-    filter(cc_dupl(., lon = "lon", lat = "lat", value = "flagged")) %>%
+    filter(!hasGeospatialIssues & hasCoordinate) %>%                                                       # remove occurences with no or wrong localisation
+    filter(occurrenceStatus == "PRESENT") %>%                                                              # remove absence records
+    filter(if_any(issue, ~!grepl(pattern = "GEODETIC_DATUM_ASSUMED_WGS84;FOOTPRINT_WKT_INVALID", .))) %>%  # remove some flagged occurences
+    filter(cc_sea(., lon = "lon", lat = "lat", ref = france0, value = "flagged")) %>%                      # remove occurences in the sea
+    filter(cc_dupl(., lon = "lon", lat = "lat", value = "flagged")) %>%                                    # remove duplicates
     select(c(lon, lat))
   
   # if there are too many occurences, resample
@@ -39,17 +41,15 @@ clean_occs <- function(infile, outfile){
   return (occs)
 }
 
+# extract data from a specific decade in a dataset
 filter_decade <- function(infile, outfile, decade_start, decade_end = (decade_start + 9)){
   occs <- fread(infile,
-                data.table = FALSE,
-                fill = FALSE,
-                encoding = "UTF-8") %>%
+                data.table = FALSE) %>%
     filter(decade_start <= year & year <= decade_end)
   
   write.csv(occs, outfile, row.names = FALSE)
   return (occs)
 }
-
 
 h1970 <- clean_occs("./data/occurrences/Hirundo_rustica_1970/occurrence.txt",
                     "./data/occurrences/occs_hirundo_1970.txt")

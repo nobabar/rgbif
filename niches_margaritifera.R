@@ -1,6 +1,7 @@
 # Rscript niches_margaritifera.R
 # qsub -cwd -V -N niches_margaritifera -pe thread 24 -b y "Rscript niches_margaritifera.R"
 
+# making sure all packages are installed and loaded
 if (!require("ENMeval")) install.packages("ENMeval"); library(ENMeval)
 if (!require("raster")) install.packages("raster"); library(raster)
 if (!require("maxnet")) install.packages("maxnet"); library(maxnet)
@@ -12,12 +13,13 @@ if (!require("RColorBrewer")) install.packages("RColorBrewer"); library(RColorBr
 if (!require("data.table")) install.packages("data.table"); library(data.table)
 if (!require("foreach")) install.packages("foreach"); library(foreach)
 
-
+# making sure a scale is between 0 and 1
 transform_scale <- function(raster_layer){
   (raster_layer - cellStats(raster_layer, min)) / 
     (cellStats(raster_layer, max) - cellStats(raster_layer, min))
 }
 
+# make the ENM model
 niche_model <- function(occs, bioclim, predictors){
   modeling.cluster <- parallel::makeCluster(24)
   doParallel::registerDoParallel(modeling.cluster)
@@ -26,39 +28,45 @@ niche_model <- function(occs, bioclim, predictors){
     .packages = "ENMeval"
   ) %dopar% {
     ENMevaluate(occs = occs, envs = predictor,
-                tune.args = list(fc = c("L","LQ","LQH","H"), rm = 1:5),
-                algorithm = 'maxnet', partitions = 'randomkfold',
-                partition.settings = list(kfolds = 12),
-                parallel = TRUE, numCores = 12)
+                tune.args = list(fc = c("L","LQ","LQH","H"),  # accept multiple feature classes and combination of feature classes
+                                 rm = 1:5),                   # test regularization multipliers between 1 and 5
+                algorithm = 'maxnet',
+                partitions = 'randomkfold',
+                partition.settings = list(kfolds = 12),       # make 12 k-fold partitions
+                parallel = TRUE, numCores = 12)               # allow parallelization on 12 cores
   }
   parallel::stopCluster(modeling.cluster)
   
   return (e.mx)
 }
 
-null_model <- function(e.mx.bioc, e.mx.river, opt.seq){
+# make null models
+null_model <- function(e.mx.bioc, e.mx.smod, opt.seq){
   null_cluster <- parallel::makeCluster(20)
   doParallel::registerDoParallel(null_cluster)
   mod.null <- foreach(
-    model = c(e.mx.bioc, e.mx.river),
+    model = c(e.mx.bioc, e.mx.smod),
     .packages = "ENMeval"
   ) %dopar% {
-    ENMnulls(model, no.iter = 10, parallel = TRUE, numCores = 10,
-             mod.settings = list(fc = opt.seq$fc, rm =  as.numeric(opt.seq$rm)))
+    ENMnulls(model, no.iter = 10,                               # loop 10 times
+             parallel = TRUE, numCores = 10,                    # allow parallelization on 10 cores
+             mod.settings = list(fc = opt.seq$fc,               # use selected feature classes combination
+                                 rm = as.numeric(opt.seq$rm)))  # use selected regularization multipliers
   }
   parallel::stopCluster(null_cluster)
   
   return (mod.null)
 }
 
+# making facetted evaluation plots
 plot_eval <- function(eval, save = NULL){
-  evalplot <- ggplot(eval, aes_string(x = "rm", y = "avg",
-                                      color = "fc", group = "fc")) + 
-    geom_point(position = position_dodge(width = 0.1)) + 
+  evalplot <- ggplot(eval, aes_string(x = "rm", y = "avg",           # use regularization multipliers as x
+                                      color = "fc", group = "fc")) + # draw a line feature classes combination
+    geom_point(position = position_dodge(width = 0.1)) +             # draw lines and points with a dodge to avoid overlapping
     geom_line(position = position_dodge(width = 0.1)) +
-    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.5,
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.5,      # add error bars
                   position = position_dodge(width = 0.1)) +
-    facet_grid(rows = vars(metric), cols = vars(source),
+    facet_grid(rows = vars(metric), cols = vars(source),             # draw each condition on faceted plots
                scales = "free_y", switch = "y") +
     theme_bw()
   
@@ -67,16 +75,17 @@ plot_eval <- function(eval, save = NULL){
   }
 }
 
-plot_pred <- function(preds, save = NULL, occ = NULL){
+# making maps for predictions
+plot_pred <- function(preds, save = NULL, occ = NULL, color_scale = "viridis"){
   p <- preds %>%
     as("SpatialPixelsDataFrame") %>%
-    as.data.frame() %>%
+    as.data.frame() %>%                                    # transform into a three columns dataframe
     setNames(c("suitability", "lon", "lat")) %>%
     ggplot(aes(x = lon, y = lat)) +
-    geom_tile(aes(fill = suitability)) +
-    scale_fill_viridis_c() +
-    coord_sf(crs = sf::st_crs(4326)) +
-    annotation_scale(location = "bl", width_hint = 0.3) +
+    geom_tile(aes(fill = suitability)) +                   # color based on suitability score
+    scale_fill_viridis_c() +                               # using the viridis color scale
+    coord_sf(crs = sf::st_crs(4326)) +                     # make sure to use the correct 
+    annotation_scale(location = "bl", width_hint = 0.3) +  # add distance scale bar
     labs(title = "", x = "longitude", y = "latitude") +
     theme(
       panel.background = element_rect(fill = "#FFFFFF", colour = "#000000",
@@ -85,33 +94,16 @@ plot_pred <- function(preds, save = NULL, occ = NULL){
                                       colour = "#808080")
     )
   
-  if (!is.null(save)){
-    if (!is.null(occ)){
-      p = p + geom_point(data = occ, size = 1.5, shape = 1)
-    }
-    ggsave(p, file = save)
+  # use correct color scale
+  if (color_scale == "viridis"){
+    p <- p + scale_fill_viridis_c()
+  } else if (color_scale == "spectral"){
+    p <- p + scale_fill_gradientn(colours = rev(brewer.pal(11, "Spectral")))
   }
   
-  return (p)
-}
-
-plot_diff <- function(preds, save = NULL){
-  p <- preds %>%
-    as("SpatialPixelsDataFrame") %>%
-    as.data.frame() %>%
-    setNames(c("suitability", "lon", "lat")) %>%
-    ggplot(aes(x = lon, y = lat)) +
-    geom_tile(aes(fill = suitability)) +
-    scale_fill_gradientn(colours = rev(brewer.pal(11, "Spectral"))) +
-    coord_sf(crs = sf::st_crs(4326)) +
-    annotation_scale(location = "bl", width_hint = 0.3) +
-    labs(title = "", x = "longitude", y = "latitude") +
-    theme(
-      panel.background = element_rect(fill = "#FFFFFF", colour = "#000000",
-                                      size = 1, linetype = "solid"),
-      panel.grid.major = element_line(size = 0.2, linetype = "solid",
-                                      colour = "#808080")
-    )
+  if (!is.null(occ)){
+    p <- p + geom_point(data = occ, size = 1.5, shape = 1)
+  }
   
   if (!is.null(save)){
     ggsave(p, file = save)
@@ -122,32 +114,32 @@ plot_diff <- function(preds, save = NULL){
 
 # main ----
 
-fig_dir <- file.path("~/save/fig/margaritifera")
+fig_dir <- file.path("./results/margaritifera")
 
-# data ----
-occs.2000 <- fread("~/save/data/occurrences/occs_margaritifera_2000.txt",
+# load data ----
+occs.2000 <- fread("./data/occurrences/occs_margaritifera_2000.txt",
                    select = c("lon", "lat"),
                    data.table = FALSE)
 
-occs.2010 <- fread("~/save/data/occurrences/occs_margaritifera_2010.txt",
+occs.2010 <- fread("./data/occurrences/occs_margaritifera_2010.txt",
                    select = c("lon", "lat"),
                    data.table = FALSE)
 
-riparian.2000 <- list.files("~/save/data/rivers/riparian_zones/2000",
+riparian.2000 <- list.files("./data/rivers/riparian_zones/2000",
                             pattern = "france_west.+tif$", full.names = TRUE) %>% stack()
 
-riparian.2010 <- list.files("~/save/data/rivers/riparian_zones/2010",
+riparian.2010 <- list.files("./data/rivers/riparian_zones/2010",
                             pattern = "france_west.+tif$", full.names = TRUE) %>% stack()
 
-river.shape <- raster("~/save/data/rivers/rivers_shape/euhydro_loire_v013_GPKG/euhydro_loire_v013.tif") %>%
+river.shape <- raster("./data/rivers/rivers_shape/euhydro_loire_v013_GPKG/euhydro_loire_v013.tif") %>%
   projectRaster(riparian.2000, method = "bilinear")
 river.shape[is.na(river.shape[])] <- 0 
 
-bioclim.2000 <- list.files("~/save/data/BioClim/2000",
+bioclim.2000 <- list.files("./data/BioClim/2000",
                            pattern = "tif$", full.names = TRUE) %>% stack() %>%
   projectRaster(riparian.2000, method = "bilinear")
 
-bioclim.2010 <- list.files("~/save/data/BioClim/2010",
+bioclim.2010 <- list.files("./data/BioClim/2010",
                            pattern = "tif$", full.names = TRUE) %>% stack() %>%
   projectRaster(riparian.2000, method = "bilinear")
 
@@ -170,6 +162,7 @@ e.mx.2010.bioc <- e.mx.2010[[1]]
 e.mx.2010.river <- e.mx.2010[[2]]
 print("done")
 
+# save models to Rdata file for future uses
 save(e.mx.2000.bioc, e.mx.2000.river,
      e.mx.2010.bioc, e.mx.2010.river,
      file = file.path(fig_dir, "models.RData"))
@@ -218,7 +211,7 @@ opt.seq <- opt %>%
   filter(or.10p.avg == min(or.10p.avg)) %>%
   tail(1)
 
-# evaluation plot on best model
+# marginal response curves plot on best model ----
 mod.seq.2000.bioc <- eval.models(e.mx.2000.bioc)[[opt.seq$tune.args]]
 mod.seq.2000.river <- eval.models(e.mx.2000.river)[[opt.seq$tune.args]]
 
@@ -261,10 +254,10 @@ plot_pred(pred.seq.2010.river, file.path(fig_dir, 2010, "pred_river_occ.svg"),
           eval.occs(e.mx.2010.river))
 
 pred.seq.bioc <- pred.seq.2010.bioc**2 - pred.seq.2000.bioc**2
-plot_diff(pred.seq.bioc, file.path(fig_dir, "preds_bioc.svg"))
+plot_pred(pred.seq.bioc, file.path(fig_dir, "preds_bioc.svg"), color_scale = "spectral")
 
 pred.seq.river <- pred.seq.2010.river**2 - pred.seq.2000.river**2
-plot_diff(pred.seq.river, file.path(fig_dir, "preds_river.svg"))
+plot_pred(pred.seq.river, file.path(fig_dir, "preds_river.svg"), color_scale = "spectral")
 
 # prediction across decades ----
 pred.2000.2010.bioc <- terra::predict(bioclim.2010,
@@ -324,6 +317,7 @@ eval.null.2010.river <- evalplot.nulls(mod.null.2010.river,
 ggsave(file = file.path(fig_dir, 2010, "nullmod_river.svg"),
        plot = eval.null.2010.river)
 
+# save null models to Rdata file for future uses
 save(mod.null.2000.bioc, mod.null.2000.river,
      mod.null.2010.bioc, mod.null.2010.river,
      file = file.path(fig_dir, "null_models.RData"))

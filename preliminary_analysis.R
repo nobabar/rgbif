@@ -19,11 +19,11 @@ make_maps <- function(occs, year="", save=NULL) {
     ggplot(aes(x = lon, y = lat)) +
     stat_density2d(aes(fill = ..level..),
                    alpha = 0.6,
-                   geom = "polygon") +
+                   geom = "polygon") +               # density heatmap
     geom_path(data = france1,
               aes(x = long, y = lat, group = group),
-              colour = "grey30") +
-    scale_fill_viridis_c() +
+              colour = "grey30") +                   # add france borders
+    scale_fill_viridis_c() +                         # use viridis color scale
     coord_fixed() +
     labs(title = "", x = "longitude", y = "latitude") +
     theme(
@@ -44,19 +44,26 @@ make_maps <- function(occs, year="", save=NULL) {
 mean_map <- function(occs, decade, level, save=NULL) {
   mean_locations <- occs %>%
     group_by_("eventDate", paste0("level", level, "Gid")) %>%
-    summarise_at(vars("lon", "lat"), mean)
+    summarise_at(vars("lon", "lat"), mean)   # summarise occurences by date and place
   
   levels <- c("regionales", "departementales", "communales")
   
   ggplot(mean_locations, aes(x = lon, y = lat)) +
     stat_density2d(aes(fill = ..level..),
                    alpha = 0.5,
-                   geom = "polygon") +
+                   geom = "polygon") +               # density heatmap
     geom_path(data = france1,
               aes(x = long, y = lat, group = group),
-              colour = "grey30") +
-    scale_fill_viridis_c() +
+              colour = "grey30") +                   # add france borders
+    scale_fill_viridis_c() +                         # use viridis color scale
     coord_fixed() +
+    theme(
+      panel.background = element_rect(fill = "#FFFFFF", colour = "#000000",
+                                      size = 1, linetype = "solid"),
+      panel.grid.major = element_line(size = 0.2, linetype = "solid",
+                                      colour = "#808080"),
+      legend.position = "none"
+    )
     
     if (!is.null(save)){
       ggsave(paste0(save, "/hirundo_mean_level_",
@@ -65,7 +72,7 @@ mean_map <- function(occs, decade, level, save=NULL) {
 }
 
 
-# import occurrence data
+# import occurrence data ----
 hirundo_occs_1970 <- fread("./data/occurrences/occs_hirundo_1970.txt",
                            data.table = FALSE)
 hirundo_occs_2010 <- fread("./data/occurrences/occs_hirundo_2010.txt",
@@ -75,11 +82,13 @@ picus_occs_1970 <- fread("./data/occurrences/occs_picus_1970.txt",
 picus_occs_2010 <- fread("./data/occurrences/occs_picus_2010.txt",
                          data.table = FALSE)
 
+# make directories
 hirundo_maps <- "./maps/hirundo"
 picus_maps <- "./maps/picus"
 if (!dir.exists(hirundo_maps)) dir.create(hirundo_maps)
 if (!dir.exists(picus_maps)) dir.create(picus_maps)
 
+# create all maps ----
 make_maps(hirundo_occs_1970, "1970", hirundo_maps)
 make_maps(hirundo_occs_2010, "2010", hirundo_maps)
 
@@ -98,7 +107,6 @@ mean_map(picus_occs_2010, "2010", 3, picus_maps)
 
 
 # normalization ----
-
 total_1970 <- occ_count(country = "FR", year = "1970,1979")
 total_2010 <- occ_count(country = "FR", year = "2010,2019")
 
@@ -145,7 +153,6 @@ hirundo_occs_2010 %>%
 
 
 # mapping after normalization ----
-
 ggplot(norm_hirundo_occs_1970, aes(x = decimalLongitude, y = decimalLatitude)) +
   stat_density2d(aes(fill = ..level..), alpha = 0.5, geom = "polygon") +
   geom_path(data = france0,
@@ -166,7 +173,6 @@ ggplot(norm_hirundo_occs_2010, aes(x = decimalLongitude, y = decimalLatitude)) +
 
 
 # tendance plot ---
-
 ji <- function(xy, origin=c(0, 0), cellsize=c(0.5, 0.5)) {
   t(apply(xy, 1, function(z) cellsize/2 + origin + cellsize * (floor((z - origin)/cellsize))))
 }

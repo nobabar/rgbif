@@ -7,6 +7,7 @@ if (!require("dplyr")) install.packages("dplyr"); library(dplyr)
 
 # directories and base files ----
 
+# france borders
 france <- shapefile("~/save/data/gadm40_FRA_shp/gadm40_FRA_0.shp")
 
 input_dir <- "~/work/WorldClim"
@@ -14,6 +15,7 @@ output_dir <- "~/save/data/WorldClim_France"
 bioclim_dir <- "~/save/data/BioClim"
 avg_dir <- "~/save/data/WorldClim_avg"
 
+# all Worldclim files
 files_1970 <- list.files(file.path(input_dir, "1970"),
                          pattern = ".tif$",
                          full.names = TRUE,
@@ -30,8 +32,7 @@ files_2010 <- list.files(file.path(input_dir, "2010"),
                          recursive = TRUE)
 
 
-# preprocess all rasters ----
-
+# crop files to france shape ----
 crop_mask <- function(files, decade, country, output_dir){
   if (!dir.exists(bioclim_dir)) dir.create(output_dir)
   
@@ -55,13 +56,12 @@ crop_mask <- function(files, decade, country, output_dir){
   parallel::stopCluster(crop_mask_cluster)
 }
 
-# crop_mask(files_1970, "1970", france, output_dir)
+crop_mask(files_1970, "1970", france, output_dir)
 crop_mask(files_2000, "2000", france, output_dir)
-# crop_mask(files_2010, "2010", france, output_dir)
+crop_mask(files_2010, "2010", france, output_dir)
 
 
-# calculating bioclim variables ----
-
+# calculate bioclim variables ----
 bioclim_decade <- function(source_dir, decade_range){
   bioclim_cluster <- parallel::makeCluster(5)
   doParallel::registerDoParallel(bioclim_cluster)
@@ -95,13 +95,12 @@ bioclim_decade <- function(source_dir, decade_range){
   return(bioc_res)
 }
 
-# bioclim_1970 <- bioclim_decade(file.path(output_dir, "1970"), 1970:1979)
+bioclim_1970 <- bioclim_decade(file.path(output_dir, "1970"), 1970:1979)
 bioclim_2000 <- bioclim_decade(file.path(output_dir, "2000"), 2000:2009)
-# bioclim_2010 <- bioclim_decade(file.path(output_dir, "2010"), 2010:2018)
+bioclim_2010 <- bioclim_decade(file.path(output_dir, "2010"), 2010:2018)
 
 
 # merge yearly bioclim layers ----
-
 combine_bioclim <- function(bioclim_res, output_dir){
   if (!dir.exists(bioclim_dir)) dir.create(output_dir)
   
@@ -124,6 +123,6 @@ combine_bioclim <- function(bioclim_res, output_dir){
   parallel::stopCluster(bioclim_cluster)
 }
 
-# combine_bioclim(bioclim_1970, file.path(bioclim_dir, "1970"))
+combine_bioclim(bioclim_1970, file.path(bioclim_dir, "1970"))
 combine_bioclim(bioclim_2000, file.path(bioclim_dir, "2000"))
-# combine_bioclim(bioclim_2010, file.path(bioclim_dir, "2010"))
+combine_bioclim(bioclim_2010, file.path(bioclim_dir, "2010"))
