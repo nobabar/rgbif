@@ -281,6 +281,10 @@ pred.2010.2000.river <- terra::predict(predictors.2000,
 plot_pred(pred.2010.2000.river, paste0(fig_dir, "/pred_2010_on_2000_river.svg"))
 
 # null model ----
+# issue in null models: Error in x[[jj]][iseq] <- vjj : replacement has length zero
+# https://githubhot.com/repo/jamiemkass/ENMeval/issues/120
+# jamiemkass (package owner seems pretty reactive so might want to ask him directly)
+
 print("starting modeling on first decade data")
 mod.null.2000 <- null_model(e.mx.2000.bioc, e.mx.2000.river, opt.seq)
 mod.null.2000.bioc <- mod.null.2000[[1]]

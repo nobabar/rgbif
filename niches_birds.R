@@ -288,6 +288,10 @@ main <- function(specie, decade1, decade2){
                                               decade1, "_smod.svg"))
   
   # null model ----
+  # issue in null models: Error in x[[jj]][iseq] <- vjj : replacement has length zero
+  # https://githubhot.com/repo/jamiemkass/ENMeval/issues/120
+  # jamiemkass (package owner seems pretty reactive so might want to ask him directly)
+  
   print("starting modeling on first decade data")
   mod.null.decade1 <- null_model(e.mx.decade1.bioc, e.mx.decade1.smod, opt.seq)
   mod.null.decade1.bioc <- mod.null.decade1[[1]]
